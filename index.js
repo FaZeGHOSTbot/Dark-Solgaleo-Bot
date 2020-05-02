@@ -3,7 +3,7 @@ const {Client, Attachment} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
 
-const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.XmnnFw.DRPRRIIJIs3RvDM95PW2TPeLmnk';
+const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
 const PREFIX = 's!';
 
