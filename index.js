@@ -1,5 +1,5 @@
 const Discord = require('discord.js')
-const {Client, Attachment} = require('discord.js');
+const {Client, Attachment, MessageEmbed} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
 
@@ -96,7 +96,12 @@ bot.on('message', message=>{
       
        var n= args[1]
        switch(args[0]){
-    
+
+         case 'help':
+            const help = new Discord.MessageEmbed()
+              .setTitle('Dark Solgaléo Bot Commands')
+         break;
+
          case 'poll':
             const pol = new Discord.MessageEmbed()
               .setColor(0xFFC300)
@@ -194,6 +199,34 @@ bot.on('message', message=>{
                }        
          break;
 
+         case 'punch':
+            let punch2 = message.mentions.user.first();
+            let punch1 = message.mentions.user.first();
+            const rand_punch = ['https://media1.tenor.com/images/c621075def6ca41785ef4aaea20cc3a2/tenor.gif?itemid=7679409' , 'https://media1.tenor.com/images/3b09dfc9c38209d87426b5fb5cee794e/tenor.gif?itemid=12395640' , 'https://media1.tenor.com/images/5511a8309a1719987a27aa7b1ee7da04/tenor.gif?itemid=12303482' , 'https://media1.tenor.com/images/517f63ce5ffc6426bddd17d7413ebaca/tenor.gif?itemid=5247335' , 'https://media1.tenor.com/images/ee3f2a6939a68df9563a7374f131fd96/tenor.gif?itemid=14210784' , 'https://media1.tenor.com/images/31686440e805309d34e94219e4bedac1/tenor.gif?itemid=4790446' , 'https://media1.tenor.com/images/0d0afe2df6c9ff3499a81bf0dab1d27c/tenor.gif?itemid=15580060']
+            file = rand_punch[Math.floor(Math.random() * rand_punch.length)]
+              if(message.content === PREFIX + "punch"){
+               const punch = new Discord.MessageEmbed()
+               .setColor(0x942727)
+               .setTitle("Wrong syntax")
+               .addField('Correct syntax' ,PREFIX + 'punch @user')
+               .addField('Example' ,PREFIX + 'punch @Lunala')
+               message.channel.embed(punch)
+
+            }else if(punch2 !== message.author){
+               const punchh = new Discord.MessageEmbed()  
+                .setTitle(`${punch1.username} punches ${punch2.username} real hard!`  )
+                .setColor(0x942727) 
+                .setImage(file) 
+                message.channel.send(punchh);                   
+            
+            }else if (punch2 == message.author){
+               const punchhh = new Discord.MessageEmbed()
+                 .setTitle(`Dark Solgaleo pucnhes ${punch2.username}...rip!`)
+                 .setColor(0x942727) 
+                 .setImage(file)  
+                 message.channel.send(punchhh);
+            }        
+      break; 
          case 'stare':
             let stare2 = message.mentions.users.first();
             let stare1 = message.author;
