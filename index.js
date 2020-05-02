@@ -348,9 +348,37 @@ bot.on('message', message=>{
               .setTitle('Everyone is Lucifer ,so are YOU.')
               .setImage('https://media.discordapp.net/attachments/548969564432498688/704676371766575124/tenor.gif')
               message.channel.send(luci)
-         break;     
+         break;  
+         
+         case 'kill':
+            let kill2 = message.mentions.users.first();
+            let kill1 = message.author;   
+            const rand_kill = ['https://media1.tenor.com/images/a80b2bf31635899ac0900ea6281a41f6/tenor.gif?itemid=5535365' , 'https://media1.tenor.com/images/d87333803d4dd839ac4fd4237e401551/tenor.gif?itemid=7350212' , 'https://media1.tenor.com/images/3c906bf056e743c5a1d175cbf52d38ec/tenor.gif?itemid=13124827' , 'https://media1.tenor.com/images/3e1febe60d2d72b8565190be010fd172/tenor.gif?itemid=12294724' , 'https://media1.tenor.com/images/b1f74ea1c8c07a930c90e0f7f74d2165/tenor.gif?itemid=9955716' , 'https://media1.tenor.com/images/d3f0893d296d19b1fb6201a30619206c/tenor.gif?itemid=7256224' , 'https://media1.tenor.com/images/3c906bf056e743c5a1d175cbf52d38ec/tenor.gif?itemid=13124827' , 'https://media1.tenor.com/images/2586b3fcdcb8c2dc9c160796738484b4/tenor.gif?itemid=11812232' , 'https://media1.tenor.com/images/3918ab9203b15b16cfc872f5540bfedc/tenor.gif?itemid=5958526' , 'https://media1.tenor.com/images/4b9da6364dc6372740eae7b15aed2306/tenor.gif?itemid=12320494']
+            file = rand_kill[Math.floor(Math.random() * rand_kill.length)]
+            if(message.content === PREFIX + "kill"){
+               const kill = new Discord.MessageEmbed()
+               .setColor(0xDADCF1)
+               .setTitle('Wrong Syntax')
+               .addField('Correct Syntax',PREFIX + 'kill @user')
+               .addField('Example',PREFIX+'kill @Lunala')
+               message.channel.send(kill)
+            
+            }else if(kill2 !== message.author){
+               const killl = new Discord.MessageEmbed()  
+                .setTitle(`${kill1.username} kills ${kill2.username}..AMEN.`  )
+                .setColor(0xDADCF1) 
+                .setImage(file) 
+                message.channel.send(killl);                   
+            
+            }else if (kill2 == message.author){
+               const killll = new Discord.MessageEmbed()
+                 .setTitle(`Dark Solgaleo kills ${kill2.username}...AMEN.`)
+                 .setColor(0xDADCF1) 
+                 .setImage(file)  
+                 message.channel.send(killll);
+            }        
+         break;
 
-        
          case 'hug':
             let hug2 = message.mentions.users.first();
             let hug1 = message.author;   
