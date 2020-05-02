@@ -221,7 +221,7 @@ bot.on('message', message=>{
             
             }else if (punch2 == message.author){
                const punchhh = new Discord.MessageEmbed()
-                 .setTitle(`Dark Solgaleo pucnhes ${punch2.username}...rip!`)
+                 .setTitle(`Dark Solgaleo punches ${punch2.username}...rip!`)
                  .setColor(0x942727) 
                  .setImage(file)  
                  message.channel.send(punchhh);
