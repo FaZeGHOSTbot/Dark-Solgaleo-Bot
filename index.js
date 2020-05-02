@@ -1,4 +1,5 @@
 const Discord = require('discord.js')
+const client = new Discord.Client();
 const {Client, Attachment, MessageEmbed} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
@@ -42,7 +43,6 @@ bot.on('message', message=>{
 
   switch(message.content.toLowerCase()){
 
-     
      case 'spawn':
       if (message.author.id === bot.user.id) return;
         message.channel.send('No spawn for you!')
@@ -53,7 +53,7 @@ bot.on('message', message=>{
         break;
      case 'lucifer':  
       if (message.author.id === bot.user.id) return;
-        message.channel.send(`**All Hail The Ruler of HELL!** <:7274_INTSL_Hellmo:705062526202937454>  `)
+        message.channel.send(`**All Hail The Ruler of HELL!** <a:7274_INTSL_Hellmo:705062526202937454>  `)
         break;
      case 'says me':
       if (message.author.id === bot.user.id) return;
@@ -92,11 +92,67 @@ bot.on('message', message=>{
       let args = message.content.substring(PREFIX.length).split(" ");
       
       if(message.content.substring(0, PREFIX.length) == PREFIX) 
-      { 
-      
+      {
        var n= args[1]
        switch(args[0]){
+  
+         /*case 'giveaway': 
 
+         const filter = msg => msg.author.id == message.author.id;
+         const options = {
+            maxMatches: 1
+          };
+          const giveaway1 = new Discord.MessageEmbed()
+          .setTitle('Giveaway Creation | 1/4')
+          .setColor(0x49E672)
+          .setDescription('Tag the channel to send the giveaway in \n \n *Type ``cancel`` anytime to cancel the giveaway*')
+          .setFooter('Dark Solgaléo Bot | Giveaway Creation');
+          message.channel.send(giveaway1)
+
+          let collector = await channel.awaitMessages(filter, options);
+          let answer = collector.first().content;
+
+          if (answer.channel.type == !text)
+            message.send.channel('Wrong Channel.')
+
+          if (answer.channel.type == text){
+             var GiveawayChannel = answer;
+             const giveaway2 = new Discord.MessageEmbed()
+             .setTitle('Giveaway Creation | 2/4')
+             .setColor(0x49E672)
+             .setDescription('How long is the giveaway for? \n \n *Type ``cancel`` anytime to cancel the giveaway*')
+             .setFooter('Dark Solgaléo Bot | Giveaway Creation'); 
+             message.channel.send(giveaway2)
+
+             let collector = await channel.awaitMessages(filter, options);
+             let answer = collector.first().content;
+
+             if (answer.)
+          }*/
+
+         case 'suggest':
+            const suggest = new Discord.MessageEmbed()
+              .setColor(0xD8F544)
+              .setTitle('✨Dark Solgaléo Server Suggestion✨')
+              .setDescription('s!suggest <suggestion>')
+            
+            if(!args[1]){
+               message.channel.send(suggest)
+               break;
+            }
+            let msgArgs1 = args.slice(1).join(" "); 
+              const suggestt = new Discord.MessageEmbed()
+                 .setTitle('✨Dark Solgaléo Server Suggestion✨')
+                 .setDescription(`👉 **${msgArgs1}** 👈`)
+                 .setTimestamp()
+                 .setFooter('Server Suggest |')
+                 .setColor(0xD8F544);
+                  bot.channels.cache.get('675130415916515339').send(suggestt).then(messageReaction =>{
+                  messageReaction.react('👍');
+                  messageReaction.react('👎');
+               })    
+            break;
+         
          case 'help':
             const help = new Discord.MessageEmbed()
               .setTitle('Dark Solgaléo Bot Commands')
