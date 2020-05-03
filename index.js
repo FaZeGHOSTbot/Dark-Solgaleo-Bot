@@ -1,13 +1,31 @@
 const Discord = require('discord.js')
 const client = new Discord.Client();
-const {Client, Attachment, MessageEmbed} = require('discord.js');
+const YouTube = require('simple-youtube-api');
+const {Client,Util, Attachment, MessageEmbed} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
+
+const ytdl = require("ytdl-core");
+
+const GOOGLE_API_KEY ="AIzaSyCiUU2va9Jpmv9q6k-kEa8-szTybgNN_Is"
+const youtube = new YouTube(GOOGLE_API_KEY);
+const queue = new Map();
 
 const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
 const PREFIX = 's!';
 
+client.once("ready", () => {
+   console.log("Ready!");
+ });
+ 
+ client.once("reconnecting", () => {
+   console.log("Reconnecting!");
+ });
+ 
+ client.once("disconnect", () => {
+   console.log("Disconnect!");
+ });
 
 
 bot.on('ready',() =>{
@@ -36,8 +54,241 @@ bot.on('guildMemberRemove', member =>{
    if(!channel) return
    channel.send(`**${member.user.tag}** Just left the server... We hope you had a great time here😭. See ya soon!🤗`)
 })
-bot.on('message', message=>{  
-   
+
+bot.on("warn", console.warn);
+bot.on("error", console.error);
+bot.on("ready", () => console.log(`${bot.user.tag} has been successfully turned on!`));
+bot.on("disconnect", () => console.log("An error occurred, trying to reconnect!"));
+bot.on("reconnecting", () => console.log("I am reconnecting now..."));
+
+bot.on("message", async msg => { // eslint-disable-line
+   if (msg.author.bot) return undefined;
+   if (!msg.content.startsWith(PREFIX)) return undefined;
+
+   const args = msg.content.split(" ");
+   const searchString = args.slice(1).join(" ");
+   const url = args[1] ? args[1].replace(/<(.+)>/g, "$1") : "";
+   const serverQueue = queue.get(msg.guild.id);
+
+   let command = msg.content.toLowerCase().split(" ")[0];
+   command = command.slice(PREFIX.length);
+
+   if (command === "help" || command == "cmd") {
+       const helpembed = new Discord.RichEmbed()
+           .setColor("#7289DA")
+           .setAuthor(bot.user.tag, bot.user.displayAvatarURL)
+           .setDescription(`
+__**Commands List**__
+> \`play\` > **\`play [title/url]\`**
+> \`search\` > **\`search [title]\`**
+> \`skip\`, \`stop\`,  \`pause\`, \`resume\`
+> \`nowplaying\`, \`queue\`, \`volume\``)
+           .setFooter("©️ 2020 Zealcord Development", "https://app.zealcord.xyz/assets/Logo.png");
+       msg.channel.send(helpembed);
+   }
+   if (command === "play" || command === "p") {
+       const voiceChannel = msg.member.voice.channel;
+       if (!voiceChannel) return msg.channel.send("I'm sorry but you need to be in a voice channel to play a music!");
+       const permissions = voiceChannel.permissionsFor(msg.client.user);
+       if (!permissions.has("CONNECT")) {
+           return msg.channel.send("Sorry, but I need **`CONNECT`** permissions to proceed!");
+       }
+       if (!permissions.has("SPEAK")) {
+           return msg.channel.send("Sorry, but I need **`SPEAK`** permissions to proceed!");
+       }
+       if (url.match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
+           const playlist = await youtube.getPlaylist(url);
+           const videos = await playlist.getVideos();
+           for (const video of Object.values(videos)) {
+               const video2 = await youtube.getVideoByID(video.id); // eslint-disable-line no-await-in-loop
+               await handleVideo(video2, msg, voiceChannel, true); // eslint-disable-line no-await-in-loop
+           }
+           return msg.channel.send(`<:yes:591629527571234819>  **|**  Playlist: **\`${playlist.title}\`** has been added to the queue!`);
+       } else {
+           try {
+               var video = await youtube.getVideo(url);
+           } catch (error) {
+               try {
+                   var videos = await youtube.searchVideos(searchString, 10);
+                   var video = await youtube.getVideoByID(videos[0].id);
+                   if (!video) return msg.channel.send("🆘  **|**  I could not obtain any search results.");
+               } catch (err) {
+                   console.error(err);
+                   return msg.channel.send("🆘  **|**  I could not obtain any search results.");
+               }
+           }
+           return handleVideo(video, msg, voiceChannel);
+       }
+   }
+   if (command === "search" || command === "sc") {
+       const voiceChannel = msg.member.voice.channel;
+       if (!voiceChannel) return msg.channel.send("I'm sorry but you need to be in a voice channel to play a music!");
+       const permissions = voiceChannel.permissionsFor(msg.client.user);
+       if (!permissions.has("CONNECT")) {
+           return msg.channel.send("Sorry, but I need **`CONNECT`** permissions to proceed!");
+       }
+       if (!permissions.has("SPEAK")) {
+           return msg.channel.send("Sorry, but I need **`SPEAK`** permissions to proceed!");
+       }
+       if (url.match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
+           const playlist = await youtube.getPlaylist(url);
+           const videos = await playlist.getVideos();
+           for (const video of Object.values(videos)) {
+               const video2 = await youtube.getVideoByID(video.id); // eslint-disable-line no-await-in-loop
+               await handleVideo(video2, msg, voiceChannel, true); // eslint-disable-line no-await-in-loop
+           }
+           return msg.channel.send(`<:yes:591629527571234819>  **|**  Playlist: **\`${playlist.title}\`** has been added to the queue!`);
+       } else {
+           try {
+               var video = await youtube.getVideo(url);
+           } catch (error) {
+               try {
+                   var videos = await youtube.searchVideos(searchString, 10);
+                   let index = 0;
+                   msg.channel.send(`
+__**Song selection**__
+${videos.map(video2 => `**\`${++index}\`  |**  ${video2.title}`).join("\n")}
+Please provide a value to select one of the search results ranging from 1-10.
+              `);
+                   // eslint-disable-next-line max-depth
+                   try {
+                       var response = await msg.channel.awaitMessages(msg2 => msg2.content > 0 && msg2.content < 11, {
+                           maxMatches: 1,
+                           time: 10000,
+                           errors: ["time"]
+                       });
+                   } catch (err) {
+                       console.error(err);
+                       return msg.channel.send("No or invalid value entered, cancelling video selection...");
+                   }
+                   const videoIndex = parseInt(response.first().content);
+                   var video = await youtube.getVideoByID(videos[videoIndex - 1].id);
+               } catch (err) {
+                   console.error(err);
+                   return msg.channel.send("🆘  **|**  I could not obtain any search results.");
+               }
+           }
+           return handleVideo(video, msg, voiceChannel);
+       }
+
+   } else if (command === "skip") {
+       if (!msg.member.voice.channel) return msg.channel.send("I'm sorry but you need to be in a voice channel to play a music!");
+       if (!serverQueue) return msg.channel.send("There is nothing playing that I could **\`skip\`** for you.");
+       serverQueue.connection.dispatcher.end("Skip command has been used!");
+       msg.channel.send("⏭️  **|**  Skip command has been used!");
+       return undefined;
+
+   } else if (command === "stop") {
+       if (!msg.member.voice.channel) return msg.channel.send("I'm sorry but you need to be in a voice channel to play music!");
+       if (!serverQueue) return msg.channel.send("There is nothing playing that I could **\`stop\`** for you.");
+       serverQueue.songs = [];
+       serverQueue.connection.dispatcher.end("Stop command has been used!");
+       msg.channel.send("⏹️  **|**  Stop command has been used!");
+       return undefined;
+
+   } else if (command === "volume" || command === "vol") {
+       if (!msg.member.voice.channel) return msg.channel.send("I'm sorry but you need to be in a voice channel to play music!");
+       if (!serverQueue) return msg.channel.send("There is nothing playing.");
+       if (!args[1]) return msg.channel.send(`The current volume is: **\`${serverQueue.volume}%\`**`);
+       serverQueue.volume = args[1];
+       serverQueue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
+       return msg.channel.send(`I set the volume to: **\`${args[1]}%\`**`);
+
+   } else if (command === "nowplaying" || command === "np") {
+       if (!serverQueue) return msg.channel.send("There is nothing playing.");
+       return msg.channel.send(`🎶  **|**  Now Playing: **\`${serverQueue.songs[0].title}\`**`);
+
+   } else if (command === "queue" || command === "q") {
+       if (!serverQueue) return msg.channel.send("There is nothing playing.");
+       return msg.channel.send(`
+__**Song Queue**__
+${serverQueue.songs.map(song => `**-** ${song.title}`).join("\n")}
+**Now Playing: \`${serverQueue.songs[0].title}\`**
+       `);
+
+   } else if (command === "pause") {
+       if (serverQueue && serverQueue.playing) {
+           serverQueue.playing = false;
+           serverQueue.connection.dispatcher.pause();
+           return msg.channel.send("⏸  **|**  Paused the music for you!");
+       }
+       return msg.channel.send("There is nothing playing.");
+
+   } else if (command === "resume") {
+       if (serverQueue && !serverQueue.playing) {
+           serverQueue.playing = true;
+           serverQueue.connection.dispatcher.resume();
+           return msg.channel.send("▶  **|**  Resumed the music for you!");
+       }
+       return msg.channel.send("There is nothing playing.");
+   }
+   return undefined;
+});
+
+async function handleVideo(video, msg, voiceChannel, playlist = false) {
+   const serverQueue = queue.get(msg.guild.id);
+   const song = {
+       id: video.id,
+       title: Util.escapeMarkdown(video.title),
+       url: `https://www.youtube.com/watch?v=${video.id}`
+   };
+   if (!serverQueue) {
+       const queueConstruct = {
+           textChannel: msg.channel,
+           voiceChannel: voiceChannel,
+           connection: null,
+           songs: [],
+           volume: 5,
+           playing: true
+       };
+       queue.set(msg.guild.id, queueConstruct);
+
+       queueConstruct.songs.push(song);
+
+       try {
+           var connection = await voiceChannel.join();
+           queueConstruct.connection = connection;
+           play(msg.guild, queueConstruct.songs[0]);
+       } catch (error) {
+           console.error(`I could not join the voice channel: ${error}`);
+           queue.delete(msg.guild.id);
+           return msg.channel.send(`I could not join the voice channel: **\`${error}\`**`);
+       }
+   } else {
+       serverQueue.songs.push(song);
+       console.log(serverQueue.songs);
+       if (playlist) return undefined;
+       else return msg.channel.send(`<:yes:591629527571234819>  **|** **\`${song.title}\`** has been added to the queue!`);
+   }
+   return undefined;
+}
+
+function play(guild, song) {
+   const serverQueue = queue.get(guild.id);
+
+   if (!song) {
+       serverQueue.voice.channel.leave();
+       queue.delete(guild.id);
+       return;
+   }
+
+   const dispatcher = serverQueue.connection.play(ytdl(song.url))
+       .on("end", reason => {
+           if (reason === "Stream is not generating quickly enough.") console.log("Song ended");
+           else console.log(reason);
+           serverQueue.songs.shift();
+           play(guild, serverQueue.songs[0]);
+       })
+       .on("error", error => console.error(error));
+   dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+
+   serverQueue.textChannel.send(`🎶  **|**  Start Playing: **\`${song.title}\`**`);
+}
+
+
+
+
+bot.on('message', message=>{
 
    if(message.content.includes('selling')) {
       if (message.author.id === bot.user.id) return;
@@ -132,7 +383,59 @@ bot.on('message', message=>{
 
              if (answer.)
           }*/
+         //case 'play':
 
+            /*function play(connection, message){
+                 var server = servers[message.guild.id];
+
+                 server.dispatcher = connection.play(ytdl(server.queue[0],{filter: "audioonly"}));
+
+                 server.queue.shift();
+
+                 server.dispatcher.on("end", function(){
+                    if(server.queue[0]){
+                       play(connection, message);
+                    }else{
+                       connection.disconnect();
+                    }  
+                    });
+                 }
+            
+              if(!args[1]){
+                 const musicfail = new Discord.MessageEmbed()
+                   .setTitle('Music Command')
+                   .setDescription('**You need to provide the song name or youtube link.**')
+                   .setFooter('Dark Solgaléo Music |')
+                   .setTimestamp()
+                   .setColor(0x7f0a0a)
+                 message.channel.send(musicfail)
+                 return;
+              }
+               if(!message.member.voice.channel){
+                  const musicfail1 = new Discord.MessageEmbed()
+                    .setTitle('Music Command')
+                    .setDescription('**You must be connected to a voice channel to play**')
+                    .setFooter('Dark Solgaléo Music |')
+                    .setTimestamp()
+                    .setColor(0x7f0a0a)
+                  message.channel.send(musicfail1)
+                  return;  
+               }  
+               
+              if(!servers[message.guild.id]) servers[message.guild.id] = {
+                 queue: []
+              } 
+
+              var server = servers[message.guild.id];
+
+              server.queue.push(args[1]);
+
+              if(!message.guild.voiceConnection) message.member.voice.channel.join().then(function(connection){
+                  play(connection, message); 
+              })
+
+              
+         break;*/
          case 'topic':
             const topic = ['What is the worst advice you have given?','What is one thing you should never say at a wedding?','What is the worst pickup line you have ever heard?','If you were a farm animal, which would you be and why?','Have you ever stalked someone on social media?','If you could do anything illegal without getting caught, what would you do?','Have you ever had a dream where everyone was in their underwear?','If someone gave you 20 dollars, what would you buy with it?','What is the first thing you think about when you wake up in the morning?','What’s your idea of a perfect playground?','When was the last time you used the words “thank you”?','Do you prefer cold weather or hot weather?','If you could be famous, would you want to? Why?','If you had $100, what would you spend it on?','Would you ever get a tattoo? What would it be?','f you could go anywhere in the world, where would you choose and why?','What is something you wish you could do everyday?','What is the biggest risk you’ve ever taken?','If someone gave you an envelope with your death date inside of it, would you open it?','Is there a dream you’ve always had?','What’s your favorite TV show?','What is your favorite book?','Do you have any nicknames?','What talent do you wish you had?','What is your favorite weekend activity?','What is your favorite place in the entire world?','Are you a cat person or a dog person?','What is the silliest thing you’ve posted online?','Who would you swap lives with for a day?','What are three fun facts about yourself?','Would you rather be invisible or have X-ray vision?','If you could only save one item from a house fire, what would it be?','What’s one movie you could watch over and over?','If you could have picked your own name, what would it be?','Have you ever really kept a New Year’s resolution?','Are you a jealous person?','If you were to remove one social media app from your phone, which would it be and why?','If you could have tea with a fictional character, who would that be?','What bores you?','What would your rock band group be called?','If your plane was going down, who would you would call?','What’s the weirdest dream you’ve ever had?','What would you do if you were home alone and the power went out?','Batman or Superman, who would win?']
             file = [Math.floor(Math.random() * topic.length)]
@@ -520,11 +823,11 @@ bot.on('message', message=>{
             break;
            
    
-            case 'prefix':
-               const prefix = new Discord.MessageEmbed()
-               .addField('Bot Prefix is:', PREFIX)
+            case 'PREFIX':
+               const PREFIX = new Discord.MessageEmbed()
+               .addField('Bot PREFIX is:', PREFIX)
                .setColor(0x2DFE2D)
-               message.channel.send(prefix); 
+               message.channel.send(PREFIX); 
                break;
    
             case 'spawn':
