@@ -38,7 +38,6 @@ bot.on('guildMemberRemove', member =>{
 })
 bot.on('message', message=>{  
    
-   
 
    if(message.content.includes('selling')) {
       if (message.author.id === bot.user.id) return;
@@ -46,7 +45,7 @@ bot.on('message', message=>{
    }
 
   switch(message.content.toLowerCase()){
-
+   
      case 'spawn':
       if (message.author.id === bot.user.id) return;
         message.channel.send('No spawn for you!')
@@ -155,7 +154,7 @@ bot.on('message', message=>{
                  .setTitle('✨Dark Solgaléo Server Suggestion✨')
                  .setDescription(`👉 **${msgArgs1}** 👈`)
                  .setTimestamp()
-                 .setFooter('Server Suggest |')
+                 .setFooter(`Suggestion By: ${message.author.tag}`)
                  .setColor(0xD8F544);
                   bot.channels.cache.get('675130415916515339').send(suggestt).then(messageReaction =>{
                   messageReaction.react('👍');
@@ -173,7 +172,7 @@ bot.on('message', message=>{
               .setColor(0xFFC300)
               .setTitle("Poll Creation")
               .setDescription("s!poll <poll topic>")
-            
+      
             if(!args[1]){
                message.channel.send(pol)
                break;
@@ -182,7 +181,7 @@ bot.on('message', message=>{
               const poll = new Discord.MessageEmbed()
                  .setTitle('📊Dark Solgaléo Server Poll')
                  .setDescription(`📌**${msgArgs}**`)
-                 .setFooter('Vote Honestly ;)')
+                 .setFooter(`Poll By: ${message.author.tag}`)
                  .setColor(0xFFC300);
             message.channel.send(poll).then(messageReaction =>{
                messageReaction.react('👍');
@@ -196,6 +195,8 @@ bot.on('message', message=>{
                file = [Math.floor(Math.random() * 7)]
                const rol = new Discord.MessageEmbed()
                  .setColor(0x6DB69B)
+                 .setFooter(`Dark Solgaléo Bot |`)
+                 .setTimestamp()
                  .addField('Rolled Number from 0 to 6:' , `***${file}***`);
                message.channel.send(rol)  
             }else if(args[1]>=6){
@@ -208,6 +209,8 @@ bot.on('message', message=>{
                const rolll = new Discord.MessageEmbed()
                .setColor(0xE81D1D)
                .setTitle('Wrong syntax!')
+               .setFooter(`Dark Solgaléo Bot |`)
+               .setTimestamp()
                .setDescription('Minimum Rolling number is 6');
                message.channel.send(rolll)
 
@@ -225,6 +228,8 @@ bot.on('message', message=>{
            const tosss = new Discord.MessageEmbed()
              .setColor(0xE7373C)
              .addField("The official DS coin drops, It's:" ,`***${file}***!`)
+             .setFooter(`Dark Solgaléo Bot |`)
+             .setTimestamp()
             message.channel.send(tosss)
          break;     
 
