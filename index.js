@@ -466,7 +466,7 @@ bot.on('message', message=>{
             if(!message.guild.voice.connection) message.member.voice.channel.join().then(function(connection){
                play(connection, message);
             })
-         break;*/
+         break;
 
          case 'skip':
             var server = servers[message.guild.id];
