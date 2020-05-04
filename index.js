@@ -9,6 +9,7 @@ const ytdl = require("ytdl-core");
 
 const GOOGLE_API_KEY ="AIzaSyCiUU2va9Jpmv9q6k-kEa8-szTybgNN_Is"
 const youtube = new YouTube(GOOGLE_API_KEY);
+var servers = {};
 const queue = new Map();
 
 const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
@@ -55,7 +56,7 @@ bot.on('guildMemberRemove', member =>{
    channel.send(`**${member.user.tag}** Just left the server... We hope you had a great time here😭. See ya soon!🤗`)
 })
 
-bot.on("warn", console.warn);
+/*bot.on("warn", console.warn);
 bot.on("error", console.error);
 bot.on("ready", () => console.log(`${bot.user.tag} has been successfully turned on!`));
 bot.on("disconnect", () => console.log("An error occurred, trying to reconnect!"));
@@ -283,7 +284,7 @@ function play(guild, song) {
    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
 
    serverQueue.textChannel.send(`🎶  **|**  Start Playing: **\`${song.title}\`**`);
-}
+}*/
 
 
 
@@ -383,7 +384,58 @@ bot.on('message', message=>{
 
              if (answer.)
           }*/
-         
+
+         case 'play':
+
+            function play(connection, message){
+               var server = servers[message.guild.id];
+
+               server.dispatcher = connection.play(ytdl(server.queue[0],{filter: "audioonly"}));
+
+               server.queue.shift();
+
+               server.dispatcher.on("end", function(){
+                  if(server.queue[0]){
+                     play(connection, message);
+                  }else{
+                     connection.disconnect();
+                  }
+               });
+            }
+             if(!args[1]){
+                const musicfail = new Discord.MessageEmbed()
+                  .setTitle("Dark Solgaléo Radio")
+                  .setDescription("**You need to provide the YouTube link or song name to play.**")
+                  .setColor(0xAD1412)
+                  .setFooter('Music Creation |')
+                  .setTimestamp();
+                message.channel.send(musicfail)   
+                return;
+            }
+
+            if(!message.member.voice.channel){
+               const musicfail1 = new Discord.MessageEmbed()
+                  .setTitle("Dark Solgaléo Radio")
+                  .setDescription("**You need to be connected to a voice channel to play.**")
+                  .setColor(0xAD1412)
+                  .setFooter('Music Creation |')
+                  .setTimestamp();
+               message.channel.send(musicfail1)
+               return;
+            }
+             
+            if(!servers[message.guild.id]) servers[message.guild.id] = {
+               queue:[]
+            } 
+          
+            var server = servers[message.guild.id];
+
+            server.queue.push(args[1]);
+
+            if(!message.guild.voice.connection) message.member.voice.channel.join().then(function(connection){
+               play(connection, message);
+            })
+         break;
          case 'topic':
             const topic = ['What is the worst advice you have given?','What is one thing you should never say at a wedding?','What is the worst pickup line you have ever heard?','If you were a farm animal, which would you be and why?','Have you ever stalked someone on social media?','If you could do anything illegal without getting caught, what would you do?','Have you ever had a dream where everyone was in their underwear?','If someone gave you 20 dollars, what would you buy with it?','What is the first thing you think about when you wake up in the morning?','What’s your idea of a perfect playground?','When was the last time you used the words “thank you”?','Do you prefer cold weather or hot weather?','If you could be famous, would you want to? Why?','If you had $100, what would you spend it on?','Would you ever get a tattoo? What would it be?','f you could go anywhere in the world, where would you choose and why?','What is something you wish you could do everyday?','What is the biggest risk you’ve ever taken?','If someone gave you an envelope with your death date inside of it, would you open it?','Is there a dream you’ve always had?','What’s your favorite TV show?','What is your favorite book?','Do you have any nicknames?','What talent do you wish you had?','What is your favorite weekend activity?','What is your favorite place in the entire world?','Are you a cat person or a dog person?','What is the silliest thing you’ve posted online?','Who would you swap lives with for a day?','What are three fun facts about yourself?','Would you rather be invisible or have X-ray vision?','If you could only save one item from a house fire, what would it be?','What’s one movie you could watch over and over?','If you could have picked your own name, what would it be?','Have you ever really kept a New Year’s resolution?','Are you a jealous person?','If you were to remove one social media app from your phone, which would it be and why?','If you could have tea with a fictional character, who would that be?','What bores you?','What would your rock band group be called?','If your plane was going down, who would you would call?','What’s the weirdest dream you’ve ever had?','What would you do if you were home alone and the power went out?','Batman or Superman, who would win?']
             file = [Math.floor(Math.random() * topic.length)]
