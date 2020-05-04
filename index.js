@@ -830,7 +830,7 @@ bot.on('message', message=>{
             case 'burn':
                if(message.member.roles.cache.some(role => role.name === 'Gym Leader')){
                if(!args[1]) return message.reply('Please specify the number of messages to be burned by HELLFIRE!')
-               message.channel.bulkDelete(args[1]+1);
+               message.channel.bulkDelete(args[1]);
                }
                break;
            
