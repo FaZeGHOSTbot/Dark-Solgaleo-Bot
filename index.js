@@ -286,9 +286,20 @@ function play(guild, song) {
 }*/
 
 
-
-
 bot.on('message', message=>{
+
+   const agrs = message.content.split(" ").slice(1);
+   var DeleteCount = parseInt(agrs[0], 10);
+   if(message.content.includes("s!burn")){
+      if(message.member.roles.cache.find(r => r.name === "Gym Leader") || message.member.hasPermission("ADMINISTRATOR", explicit = true) ){
+      if(!DeleteCount){
+         message.channel.send("Type the number of messages to be deleted.")
+         message.delete();
+      }else{
+         message.channel.bulkDelete(DeleteCount+1);
+      };
+      };
+   }
 
    if(message.content.includes('selling')) {
       if (message.author.id === bot.user.id) return;
@@ -345,44 +356,17 @@ bot.on('message', message=>{
       
       let args = message.content.substring(PREFIX.length).split(" ");
       
-      if(message.content.substring(0, PREFIX.length) == PREFIX) 
+      if(message.content.substring(0, PREFIX.length) == PREFIX)
       {
+         
        var n= args[1]
-       switch(args[0]){
-  
-         /*case 'giveaway': 
-
-         const filter = msg => msg.author.id == message.author.id;
-         const options = {
-            maxMatches: 1
-          };
-          const giveaway1 = new Discord.MessageEmbed()
-          .setTitle('Giveaway Creation | 1/4')
-          .setColor(0x49E672)
-          .setDescription('Tag the channel to send the giveaway in \n \n *Type ``cancel`` anytime to cancel the giveaway*')
-          .setFooter('Dark Solgaléo Bot | Giveaway Creation');
-          message.channel.send(giveaway1)
-
-          let collector = await channel.awaitMessages(filter, options);
-          let answer = collector.first().content;
-
-          if (answer.channel.type == !text)
-            message.send.channel('Wrong Channel.')
-
-          if (answer.channel.type == text){
-             var GiveawayChannel = answer;
-             const giveaway2 = new Discord.MessageEmbed()
-             .setTitle('Giveaway Creation | 2/4')
-             .setColor(0x49E672)
-             .setDescription('How long is the giveaway for? \n \n *Type ``cancel`` anytime to cancel the giveaway*')
-             .setFooter('Dark Solgaléo Bot | Giveaway Creation'); 
-             message.channel.send(giveaway2)
-
-             let collector = await channel.awaitMessages(filter, options);
-             let answer = collector.first().content;
-
-             if (answer.)
-          }*/
+       switch(args[0])
+       {
+           case 'burn':
+            if(member.roles.cache.some(role => role.name === 'Mod')==true)
+         
+             
+           break;
 
          /*case 'play':
 
@@ -502,9 +486,6 @@ bot.on('message', message=>{
             }   
 
          break;   
-
-               
-            
 
          case 'toss':
          case 'coinflip':
@@ -827,14 +808,9 @@ bot.on('message', message=>{
                message.channel.send(embed) 
             break;
    
-            case 'burn':
-               if(message.member.roles.cache.some(role => role.name === 'Gym Leader')){
-               if(!args[1]) return message.reply('Please specify the number of messages to be burned by HELLFIRE!')
-               message.channel.bulkDelete(args[1]+1);
-               break;
-               }
-               break;
-           
+         
+              
+            break;
             case 'info':
                  const info = new Discord.MessageEmbed()
                  .setTitle('Bot Info')
