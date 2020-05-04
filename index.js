@@ -362,11 +362,6 @@ bot.on('message', message=>{
        var n= args[1]
        switch(args[0])
        {
-           case 'burn':
-            if(member.roles.cache.some(role => role.name === 'Mod')==true)
-         
-             
-           break;
 
          /*case 'play':
 
