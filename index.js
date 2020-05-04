@@ -443,7 +443,7 @@ bot.on('message', message=>{
             message.channel.send("Current song skipped!")
             break;
          case 'disconnect':
-            var server = servers[message.guild.id];
+            var server = servers[message.guild.id];   
             if(message.guild.voice.connection){
                for(var i = server.queue.length -1; i >=0; i--){
                   server.queue.splice(i,1);
