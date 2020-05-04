@@ -10,6 +10,7 @@ const ytdl = require("ytdl-core");
 const GOOGLE_API_KEY ="AIzaSyCiUU2va9Jpmv9q6k-kEa8-szTybgNN_Is"
 const youtube = new YouTube(GOOGLE_API_KEY);
 var servers = {};
+const queue = new Map();
 
 const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
