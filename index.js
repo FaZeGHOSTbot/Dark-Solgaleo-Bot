@@ -44,28 +44,6 @@ const client = new CommandoClient({
   owner: 'your-discord-user-id' // change this to your Discord user ID
 });
 
- client.registry
-   .registerDefaultTypes()
-   .registerGroups([
-     ['music', 'Music Command Group']
-   ])
-   .registerDefaultGroups()
-   .registerDefaultCommands()
-   .registerCommandsIn(path.join(__dirname, 'commands'));
- 
-
-client.once("ready", () => {
-   console.log("Ready!");
- });
- 
- client.once("reconnecting", () => {
-   console.log("Reconnecting!");
- });
- 
- client.once("disconnect", () => {
-   console.log("Disconnect!");
- });
-
 
 bot.on('ready',() =>{
 
