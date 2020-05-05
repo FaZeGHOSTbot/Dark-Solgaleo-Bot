@@ -1,43 +1,49 @@
 const Discord = require('discord.js')
-const client = new Discord.Client();
-const YouTube = require('simple-youtube-api');
 const { CommandoClient } = require('discord.js-commando');
 const { Structures } = require('discord.js');
 const path = require('path');
 const {Client,Util, Attachment, MessageEmbed} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
-
+const Youtube = require('simple-youtube-api');
+const { Command } = require('discord.js-commando');
+const youtubeAPI  = 'AIzaSyCiUU2va9Jpmv9q6k-kEa8-szTybgNN_Is'
+const youtube = new Youtube(youtubeAPI);
 const ytdl = require("ytdl-core");
-
-const GOOGLE_API_KEY ="AIzaSyCiUU2va9Jpmv9q6k-kEa8-szTybgNN_Is"
-const youtube = new YouTube(GOOGLE_API_KEY);
 var servers = {};
 const queue = new Map();
 
 const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
-const PREFIX = 's!';
-Structures.extend('Guild', Guild => {
+Structures.extend('Guild', function(Guild) {
    class MusicGuild extends Guild {
      constructor(client, data) {
        super(client, data);
        this.musicData = {
          queue: [],
          isPlaying: false,
-         volume: 1,
-         songDispatcher: null
+         nowPlaying: null,
+         songDispatcher: null,
+         volume: 1
+       };
+       this.triviaData = {
+         isTriviaRunning: false,
+         wasTriviaEndCalled: false,
+         triviaQueue: [],
+         triviaScore: new Map()
        };
      }
    }
    return MusicGuild;
  });
- const client = new CommandoClient({
-   commandPrefix: prefix,
-   owner: 'your-discord-user-id',
-   unknownCommandResponse: false
- });
- 
+
+const PREFIX = 's!';
+
+const client = new CommandoClient({
+  commandPrefix: PREFIX,
+  owner: 'your-discord-user-id' // change this to your Discord user ID
+});
+
  client.registry
    .registerDefaultTypes()
    .registerGroups([
@@ -72,6 +78,720 @@ bot.on('ready',() =>{
     }, 5*10000);
 })
 
+module.exports = class LeaveCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'leave',
+       aliases: ['end'],
+       group: 'music',
+       memberName: 'leave',
+       guildOnly: true,
+       description: 'Leaves voice channel if in one'
+     });
+   }
+ 
+   run(message) {
+     var voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher == null
+     ) {
+       return message.reply('There is no song playing right now!');
+     }
+     if (!message.guild.musicData.queue)
+       return message.say('There are no songs in queue');
+     message.guild.musicData.songDispatcher.end();
+     message.guild.musicData.queue.length = 0;
+     return;
+   }
+ };
+
+ module.exports = class LoopCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'loop',
+       group: 'music',
+       memberName: 'loop',
+       guildOnly: true,
+       description: 'Loop the current playing song'
+     });
+   }
+ 
+   run(message) {
+     if (!message.guild.musicData.isPlaying) {
+       return message.say('There is no song playing right now!');
+     } else if (
+       message.guild.musicData.isPlaying &&
+       message.guild.triviaData.isTriviaRunning
+     ) {
+       return message.say('You cannot loop over a trivia!');
+     }
+ 
+     message.channel.send(
+       `${message.guild.musicData.nowPlaying.title} added to queue`
+     );
+     message.guild.musicData.queue.unshift(message.guild.musicData.nowPlaying);
+     return;
+   }
+ };
+
+ module.exports = class NowPlayingCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'nowplaying',
+       group: 'music',
+       memberName: 'nowplaying',
+       aliases: ['np', 'currently-playing', 'now-playing'],
+       guildOnly: true,
+       description: 'Display the currently playing song'
+     });
+   }
+ 
+   run(message) {
+     if (
+       (!message.guild.musicData.isPlaying &&
+         !message.guild.musicData.nowPlaying) ||
+       message.guild.triviaData.isTriviaRunning
+     ) {
+       return message.say('There is no song playing right now!');
+     }
+ 
+     const video = message.guild.musicData.nowPlaying;
+     let description;
+     if (video.duration == 'Live Stream') {
+       description = 'Live Stream';
+     } else {
+       description = NowPlayingCommand.playbackBar(message, video);
+     }
+ 
+     const videoEmbed = new MessageEmbed()
+       .setThumbnail(video.thumbnail)
+       .setColor('#e9f931')
+       .setTitle(video.title)
+       .setDescription(description);
+     message.channel.send(videoEmbed);
+     return;
+   }
+   static playbackBar(message, video) {
+     const passedTimeInMS = message.guild.musicData.songDispatcher.streamTime;
+     const passedTimeInMSObj = {
+       seconds: Math.floor((passedTimeInMS / 1000) % 60),
+       minutes: Math.floor((passedTimeInMS / (1000 * 60)) % 60),
+       hours: Math.floor((passedTimeInMS / (1000 * 60 * 60)) % 24)
+     };
+     const passedTimeFormatted = NowPlayingCommand.formatDuration(
+       passedTimeInMSObj
+     );
+ 
+     const totalDurationObj = video.rawDuration;
+     const totalDurationFormatted = NowPlayingCommand.formatDuration(
+       totalDurationObj
+     );
+ 
+     let totalDurationInMS = 0;
+     Object.keys(totalDurationObj).forEach(function(key) {
+       if (key == 'hours') {
+         totalDurationInMS = totalDurationInMS + totalDurationObj[key] * 3600000;
+       } else if (key == 'minutes') {
+         totalDurationInMS = totalDurationInMS + totalDurationObj[key] * 60000;
+       } else if (key == 'seconds') {
+         totalDurationInMS = totalDurationInMS + totalDurationObj[key] * 100;
+       }
+     });
+     const playBackBarLocation = Math.round(
+       (passedTimeInMS / totalDurationInMS) * 10
+     );
+     let playBack = '';
+     for (let i = 1; i < 21; i++) {
+       if (playBackBarLocation == 0) {
+         playBack = ':musical_note:▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬';
+         break;
+       } else if (playBackBarLocation == 10) {
+         playBack = '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬:musical_note:';
+         break;
+       } else if (i == playBackBarLocation * 2) {
+         playBack = playBack + ':musical_note:';
+       } else {
+         playBack = playBack + '▬';
+       }
+     }
+     playBack = `${passedTimeFormatted}  ${playBack}  ${totalDurationFormatted}`;
+     return playBack;
+   }
+   // prettier-ignore
+   static formatDuration(durationObj) {
+       const duration = `${durationObj.hours ? (durationObj.hours + ':') : ''}${
+         durationObj.minutes ? durationObj.minutes : '00'
+       }:${
+         (durationObj.seconds < 10)
+           ? ('0' + durationObj.seconds)
+           : (durationObj.seconds
+           ? durationObj.seconds
+           : '00')
+       }`;
+       return duration;
+     }
+ };
+
+ module.exports = class PauseCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'pause',
+       aliases: ['pause-song', 'hold', 'stop'],
+       memberName: 'pause',
+       group: 'music',
+       description: 'Pause the current playing song',
+       guildOnly: true
+     });
+   }
+ 
+   run(message) {
+     var voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher == null
+     ) {
+       return message.say('There is no song playing right now!');
+     }
+ 
+     message.say('Song paused :pause_button:');
+ 
+     message.guild.musicData.songDispatcher.pause();
+   }
+ };
+
+ module.exports = class PlayCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'play',
+       aliases: ['play-song', 'add'],
+       memberName: 'play',
+       group: 'music',
+       description: 'Play any song or playlist from youtube',
+       guildOnly: true,
+       clientPermissions: ['SPEAK', 'CONNECT'],
+       throttling: {
+         usages: 2,
+         duration: 5
+       },
+       args: [
+         {
+           key: 'query',
+           prompt: 'What song or playlist would you like to listen to?',
+           type: 'string',
+           validate: function(query) {
+             return query.length > 0 && query.length < 200;
+           }
+         }
+       ]
+     });
+   }
+ 
+   async run(message, { query }) {
+     const voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.say('Join a channel and try again');
+ 
+     if (message.guild.triviaData.isTriviaRunning == true) {
+       return message.say('Please try after the trivia has ended');
+     }
+ 
+     if (
+       // if the user entered a youtube playlist url
+       query.match(
+         /^(?!.*\?.*\bv=)https:\/\/www\.youtube\.com\/.*\?.*\blist=.*$/
+       )
+     ) {
+       const playlist = await youtube.getPlaylist(query).catch(function() {
+         return message.say('Playlist is either private or it does not exist!');
+       });
+       // remove the 10 if you removed the queue limit conditions below
+       const videosObj = await playlist.getVideos(10).catch(function() {
+         return message.say(
+           'There was a problem getting one of the videos in the playlist!'
+         );
+       });
+       for (let i = 0; i < videosObj.length; i++) {
+         const video = await videosObj[i].fetch();
+         // this can be uncommented if you choose to limit the queue
+         // if (message.guild.musicData.queue.length < 10) {
+         //
+         message.guild.musicData.queue.push(
+           PlayCommand.constructSongObj(video, voiceChannel)
+         );
+         // } else {
+         //   return message.say(
+         //     `I can't play the full playlist because there will be more than 10 songs in queue`
+         //   );
+         // }
+       }
+       if (message.guild.musicData.isPlaying == false) {
+         message.guild.musicData.isPlaying = true;
+         return PlayCommand.playSong(message.guild.musicData.queue, message);
+       } else if (message.guild.musicData.isPlaying == true) {
+         return message.say(
+           `Playlist - :musical_note:  ${playlist.title} :musical_note: has been added to queue`
+         );
+       }
+     }
+ 
+     // This if statement checks if the user entered a youtube url, it can be any kind of youtube url
+     if (query.match(/^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+/)) {
+       query = query
+         .replace(/(>|<)/gi, '')
+         .split(/(vi\/|v=|\/v\/|youtu\.be\/|\/embed\/)/);
+       const id = query[2].split(/[^0-9a-z_\-]/i)[0];
+       const video = await youtube.getVideoByID(id).catch(function() {
+         return message.say(
+           'There was a problem getting the video you provided!'
+         );
+       });
+       // // can be uncommented if you don't want the bot to play live streams
+       // if (video.raw.snippet.liveBroadcastContent === 'live') {
+       //   return message.say("I don't support live streams!");
+       // }
+       // // can be uncommented if you don't want the bot to play videos longer than 1 hour
+       // if (video.duration.hours !== 0) {
+       //   return message.say('I cannot play videos longer than 1 hour');
+       // }
+       // // can be uncommented if you want to limit the queue
+       // if (message.guild.musicData.queue.length > 10) {
+       //   return message.say(
+       //     'There are too many songs in the queue already, skip or wait a bit'
+       //   );
+       // }
+       message.guild.musicData.queue.push(
+         PlayCommand.constructSongObj(video, voiceChannel)
+       );
+       if (
+         message.guild.musicData.isPlaying == false ||
+         typeof message.guild.musicData.isPlaying == 'undefined'
+       ) {
+         message.guild.musicData.isPlaying = true;
+         return PlayCommand.playSong(message.guild.musicData.queue, message);
+       } else if (message.guild.musicData.isPlaying == true) {
+         return message.say(`${video.title} added to queue`);
+       }
+     }
+ 
+     // if user provided a song/video name
+     const videos = await youtube.searchVideos(query, 5).catch(function() {
+       return message.say(
+         'There was a problem searching the video you requested :('
+       );
+     });
+     if (videos.length < 5) {
+       return message.say(
+         `I had some trouble finding what you were looking for, please try again or be more specific`
+       );
+     }
+     const vidNameArr = [];
+     for (let i = 0; i < videos.length; i++) {
+       vidNameArr.push(`${i + 1}: ${videos[i].title}`);
+     }
+     vidNameArr.push('exit');
+     const embed = new MessageEmbed()
+       .setColor('#e9f931')
+       .setTitle('Choose a song by commenting a number between 1 and 5')
+       .addField('Song 1', vidNameArr[0])
+       .addField('Song 2', vidNameArr[1])
+       .addField('Song 3', vidNameArr[2])
+       .addField('Song 4', vidNameArr[3])
+       .addField('Song 5', vidNameArr[4])
+       .addField('Exit', 'exit');
+     var songEmbed = await message.channel.send({ embed });
+     message.channel
+       .awaitMessages(
+         function(msg) {
+           return (msg.content > 0 && msg.content < 6) || msg.content === 'exit';
+         },
+         {
+           max: 1,
+           time: 60000,
+           errors: ['time']
+         }
+       )
+       .then(function(response) {
+         const videoIndex = parseInt(response.first().content);
+         if (response.first().content === 'exit') return songEmbed.delete();
+         youtube
+           .getVideoByID(videos[videoIndex - 1].id)
+           .then(function(video) {
+             // // can be uncommented if you don't want the bot to play live streams
+             // if (video.raw.snippet.liveBroadcastContent === 'live') {
+             //   songEmbed.delete();
+             //   return message.say("I don't support live streams!");
+             // }
+ 
+             // // can be uncommented if you don't want the bot to play videos longer than 1 hour
+             // if (video.duration.hours !== 0) {
+             //   songEmbed.delete();
+             //   return message.say('I cannot play videos longer than 1 hour');
+             // }
+ 
+             // // can be uncommented if you don't want to limit the queue
+             // if (message.guild.musicData.queue.length > 10) {
+             //   songEmbed.delete();
+             //   return message.say(
+             //     'There are too many songs in the queue already, skip or wait a bit'
+             //   );
+             // }
+             message.guild.musicData.queue.push(
+               PlayCommand.constructSongObj(video, voiceChannel)
+             );
+             if (message.guild.musicData.isPlaying == false) {
+               message.guild.musicData.isPlaying = true;
+               if (songEmbed) {
+                 songEmbed.delete();
+               }
+               PlayCommand.playSong(message.guild.musicData.queue, message);
+             } else if (message.guild.musicData.isPlaying == true) {
+               if (songEmbed) {
+                 songEmbed.delete();
+               }
+               return message.say(`${video.title} added to queue`);
+             }
+           })
+           .catch(function() {
+             if (songEmbed) {
+               songEmbed.delete();
+             }
+             return message.say(
+               'An error has occured when trying to get the video ID from youtube'
+             );
+           });
+       })
+       .catch(function() {
+         if (songEmbed) {
+           songEmbed.delete();
+         }
+         return message.say(
+           'Please try again and enter a number between 1 and 5 or exit'
+         );
+       });
+   }
+   static playSong(queue, message) {
+     const classThis = this; // use classThis instead of 'this' because of lexical scope below
+     queue[0].voiceChannel
+       .join()
+       .then(function(connection) {
+         const dispatcher = connection
+           .play(
+             ytdl(queue[0].url, {
+               quality: 'highestaudio',
+               highWaterMark: 1024 * 1024 * 10
+             })
+           )
+           .on('start', function() {
+             message.guild.musicData.songDispatcher = dispatcher;
+             dispatcher.setVolume(message.guild.musicData.volume);
+             const videoEmbed = new MessageEmbed()
+               .setThumbnail(queue[0].thumbnail)
+               .setColor('#e9f931')
+               .addField('Now Playing:', queue[0].title)
+               .addField('Duration:', queue[0].duration);
+             if (queue[1]) videoEmbed.addField('Next Song:', queue[1].title);
+             message.say(videoEmbed);
+             message.guild.musicData.nowPlaying = queue[0];
+             return queue.shift();
+           })
+           .on('finish', function() {
+             if (queue.length >= 1) {
+               return classThis.playSong(queue, message);
+             } else {
+               message.guild.musicData.isPlaying = false;
+               message.guild.musicData.nowPlaying = null;
+               message.guild.musicData.songDispatcher = null;
+               return message.guild.me.voice.channel.leave();
+             }
+           })
+           .on('error', function(e) {
+             message.say('Cannot play song');
+             console.error(e);
+             message.guild.musicData.queue.length = 0;
+             message.guild.musicData.isPlaying = false;
+             message.guild.musicData.nowPlaying = null;
+             message.guild.musicData.songDispatcher = null;
+             return message.guild.me.voice.channel.leave();
+           });
+       })
+       .catch(function(e) {
+         console.error(e);
+         return message.guild.me.voice.channel.leave();
+       });
+   }
+   static constructSongObj(video, voiceChannel) {
+     let duration = this.formatDuration(video.duration);
+     if (duration == '00:00') duration = 'Live Stream';
+     return {
+       url: `https://www.youtube.com/watch?v=${video.raw.id}`,
+       title: video.title,
+       rawDuration: video.duration,
+       duration,
+       thumbnail: video.thumbnails.high.url,
+       voiceChannel
+     };
+   }
+   // prettier-ignore
+   static formatDuration(durationObj) {
+     const duration = `${durationObj.hours ? (durationObj.hours + ':') : ''}${
+       durationObj.minutes ? durationObj.minutes : '00'
+     }:${
+       (durationObj.seconds < 10)
+         ? ('0' + durationObj.seconds)
+         : (durationObj.seconds
+         ? durationObj.seconds
+         : '00')
+     }`;
+     return duration;
+   }
+ };
+
+ module.exports = class QueueCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'queue',
+       aliases: ['song-list', 'next-songs'],
+       group: 'music',
+       memberName: 'queue',
+       guildOnly: true,
+       description: 'Display the song queue'
+     });
+   }
+ 
+   run(message) {
+     if (message.guild.triviaData.isTriviaRunning)
+       return message.say('Try again after the trivia has ended');
+     if (message.guild.musicData.queue.length == 0)
+       return message.say('There are no songs in queue!');
+     const titleArray = [];
+     /* eslint-disable */
+     message.guild.musicData.queue.map(obj => {
+       titleArray.push(obj.title);
+     });
+     /* eslint-enable */
+     var queueEmbed = new MessageEmbed()
+       .setColor('#ff7373')
+       .setTitle('Music Queue');
+     for (let i = 0; i < titleArray.length; i++) {
+       queueEmbed.addField(`${i + 1}:`, `${titleArray[i]}`);
+     }
+     return message.say(queueEmbed);
+   }
+ };
+
+ module.exports = class RemoveSongCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'remove',
+       memberName: 'remove',
+       group: 'music',
+       description: 'Remove a specific song from queue',
+       guildOnly: true,
+       args: [
+         {
+           key: 'songNumber',
+           prompt: 'What song number do you want to remove from queue?',
+           type: 'integer'
+         }
+       ]
+     });
+   }
+   run(message, { songNumber }) {
+     if (songNumber < 1 && songNumber >= message.guild.musicData.queue.length) {
+       return message.reply('Please enter a valid song number');
+     }
+     var voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher == null
+     ) {
+       return message.reply('There is no song playing right now!');
+     }
+ 
+     message.guild.musicData.queue.splice(songNumber - 1, 1);
+     return message.say(`Removed song number ${songNumber} from queue`);
+   }
+ };
+
+ module.exports = class ResumeCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'resume',
+       aliases: ['resume-song', 'continue'],
+       memberName: 'resume',
+       group: 'music',
+       description: 'Resume the current paused song',
+       guildOnly: true
+     });
+   }
+ 
+   run(message) {
+     var voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher === null
+     ) {
+       return message.reply('There is no song playing right now!');
+     }
+ 
+     message.say('Song resumed :play_pause:');
+ 
+     message.guild.musicData.songDispatcher.resume();
+   }
+ };
+
+ module.exports = class SkipCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'skip',
+       aliases: ['skip-song', 'advance-song'],
+       memberName: 'skip',
+       group: 'music',
+       description: 'Skip the current playing song',
+       guildOnly: true
+     });
+   }
+ 
+   run(message) {
+     const voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher == null
+     ) {
+       return message.reply('There is no song playing right now!');
+     } else if (message.guild.triviaData.isTriviaRunning) {
+       return message.reply(`You can't skip a trivia! Use end-trivia`);
+     }
+     message.guild.musicData.songDispatcher.end();
+   }
+ };
+
+ module.exports = class SkipAllCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'skipall',
+       aliases: ['skip-all'],
+       memberName: 'skipall',
+       group: 'music',
+       description: 'Skip all songs in queue',
+       guildOnly: true
+     });
+   }
+ 
+   run(message) {
+     var voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher == null
+     ) {
+       return message.reply('There is no song playing right now!');
+     }
+     if (!message.guild.musicData.queue)
+       return message.say('There are no songs in queue');
+     message.guild.musicData.songDispatcher.end();
+     message.guild.musicData.queue.length = 0; // clear queue
+     return;
+   }
+ };
+
+ module.exports = class SkipToCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'skipto',
+       memberName: 'skipto',
+       group: 'music',
+       description:
+         'Skip to a specific song in the queue, provide the song number as an argument',
+       guildOnly: true,
+       args: [
+         {
+           key: 'songNumber',
+           prompt:
+             'What is the number in queue of the song you want to skip to?, it needs to be greater than 1',
+           type: 'integer'
+         }
+       ]
+     });
+   }
+ 
+   run(message, { songNumber }) {
+     if (songNumber < 1 && songNumber >= message.guild.musicData.queue.length) {
+       return message.reply('Please enter a valid song number');
+     }
+     var voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher == null
+     ) {
+       return message.reply('There is no song playing right now!');
+     }
+ 
+     if (message.guild.musicData.queue < 1)
+       return message.say('There are no songs in queue');
+ 
+     message.guild.musicData.queue.splice(0, songNumber - 1);
+     message.guild.musicData.songDispatcher.end();
+     return;
+   }
+ };
+ 
+ module.exports = class VolumeCommand extends Command {
+   constructor(client) {
+     super(client, {
+       name: 'volume',
+       aliases: ['change-volume'],
+       group: 'music',
+       memberName: 'volume',
+       guildOnly: true,
+       description: 'Adjust song volume',
+       throttling: {
+         usages: 1,
+         duration: 5
+       },
+       args: [
+         {
+           key: 'wantedVolume',
+           prompt: 'What volume would you like to set? from 1 to 200',
+           type: 'integer',
+           validate: function(wantedVolume) {
+             return wantedVolume >= 1 && wantedVolume <= 200;
+           }
+         }
+       ]
+     });
+   }
+ 
+   run(message, { wantedVolume }) {
+     const voiceChannel = message.member.voice.channel;
+     if (!voiceChannel) return message.reply('Join a channel and try again');
+ 
+     if (
+       typeof message.guild.musicData.songDispatcher == 'undefined' ||
+       message.guild.musicData.songDispatcher == null
+     ) {
+       return message.reply('There is no song playing right now!');
+     }
+     const volume = wantedVolume / 100;
+     message.guild.musicData.volume = volume;
+     message.guild.musicData.songDispatcher.setVolume(volume);
+     message.say(`Current volume is: ${wantedVolume}%`);
+   }
+ };
+
 bot.on('guildMemberAdd', member=>{
     const channel = member.guild.channels.cache.find(channel => channel.name === "✨》welcome");
     if(!channel) return
@@ -94,21 +814,7 @@ bot.on("ready", () => console.log(`${bot.user.tag} has been successfully turned 
 bot.on("disconnect", () => console.log("An error occurred, trying to reconnect!"));
 bot.on("reconnecting", () => console.log("I am reconnecting now..."));
 
-bot.on("message", async msg => { // eslint-disable-line
-   if (msg.author.bot) return undefined;
-   if (!msg.content.startsWith(PREFIX)) return undefined;
-
-   const args = msg.content.split(" ");
-   const searchString = args.slice(1).join(" ");
-   const url = args[1] ? args[1].replace(/<(.+)>/g, "$1") : "";
-   const serverQueue = queue.get(msg.guild.id);
-
-   let command = msg.content.toLowerCase().split(" ")[0];
-   command = command.slice(PREFIX.length);
-
   
-
-
 bot.on('message', message=>{
 
    const agrs = message.content.split(" ").slice(1);
@@ -613,8 +1319,4 @@ bot.on('message', message=>{
 
 })   
 
-
-
 bot.login(token);
-
-
