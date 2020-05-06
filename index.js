@@ -241,7 +241,7 @@ bot.on('message', message=>{
               .setTimestamp();
               bot.channels.cache.get('696695304241807390').send(gymlog)
           }
-        }
+        }else{message.channel.send("You don't have perm to use this command" )}
          break;
 
          case 'pat':
