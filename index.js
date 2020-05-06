@@ -219,7 +219,7 @@ bot.on('message', message=>{
          break;
 
          case 'gym-log':
-
+          if(message.member.roles.cache.find(r => r.name === "Gym Leader") || message.member.hasPermission("ADMINISTRATOR", explicit = true) ){
           let gym2 = message.mentions.users.first();
           let gym1 = message.author;
           let gymScore = args.slice(4).join(" ")
@@ -241,6 +241,7 @@ bot.on('message', message=>{
               .setTimestamp();
               bot.channels.cache.get('696695304241807390').send(gymlog)
           }
+        }
          break;
 
          case 'pat':
