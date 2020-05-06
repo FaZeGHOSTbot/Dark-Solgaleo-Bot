@@ -218,6 +218,31 @@ bot.on('message', message=>{
           message.channel.send(pong)
          break;
 
+         case 'gym-log':
+
+          let gym2 = message.mentions.users.first();
+          let gym1 = message.author;
+          let gymScore = args.slice(4).join(" ")
+          let gymChan = message.content.channel;
+          if(message.content == !(`${PREFIX} gym-log ${gym2} ${gymChan} ${gymScore}`) || message.content == PREFIX +'gym-log'){
+            const logfail = new Discord.MessageEmbed()
+              .setTitle('Dark Solgaleo Gym Log')
+              .addField('Correct Syntax',PREFIX + `@user #<hannel> <result>`)
+              .setColor(0x46C656)
+              .setTimestamp()
+            message.channel.send(logfail);
+          }else{
+            message.channel.send('Gym message logged in <#696695304241807390>');
+            const gymlog = new Discord.MessageEmbed()
+              .setTitle('Gym Log')
+              .addField('Gym Leader' , `${gym1}`,true)
+              .addField('Challenger', `${gym2}`,true)
+              .addField('Score',`${gymScore}`)    
+              .setTimestamp();
+              bot.channels.cache.get('696695304241807390').send(gymlog)
+          }
+         break;
+
          case 'pat':
           let pat2 = message.mentions.users.first();
           let pat1 = message.author;
