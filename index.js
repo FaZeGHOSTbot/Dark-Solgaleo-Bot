@@ -222,7 +222,7 @@ bot.on('message', message=>{
           if(message.member.roles.cache.find(r => r.name === "Gym Leader") || message.member.hasPermission("ADMINISTRATOR", explicit = true) ){
           let gym2 = message.mentions.users.first();
           let gym1 = message.author;
-          let gymScore = args.slice(4).join(" ")
+          let gymScore = args.slice(3).join(" ")
           let gymChan = message.content.channel;
           if(message.content == !(`${PREFIX} gym-log ${gym2} ${gymChan} ${gymScore}`) || message.content == PREFIX +'gym-log'){
             const logfail = new Discord.MessageEmbed()
