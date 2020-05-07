@@ -14,10 +14,11 @@ bot.on('ready',() =>{
    //705779183544172574
     var testChannel = bot.channels.cache.find(channel => channel.id === '705779183544172574')
     console.log('HELL is unleashed!');
-
+    
     setInterval(() =>{
      testChannel.send('<@687565275914043421>');
     }, 5*10000);
+    bot.user.setActivity('Dark Solgaléo Server', { type: 'WATCHING'}).catch(console.error)
 })
 
 
@@ -213,7 +214,7 @@ bot.on('message', message=>{
          case 'ping':
            const pong = new Discord.MessageEmbed()
            
-             .addField('P0ng!',`Ping is ${bot.ws.ping}ms`)
+             .addField('P0ng!',`💝Ping is ${bot.ws.ping}ms`)
              .setColor(0x736496) 
           message.channel.send(pong)
          break;
