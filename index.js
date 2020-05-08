@@ -154,6 +154,7 @@ bot.on('message', message=>{
               .setFooter('Under development |')
               .setTimestamp();
               message.author.send(help);
+              message.channel.send('sent you a message in DM!')
          break;
 
          case 'poll':
