@@ -144,7 +144,7 @@ bot.on('message', message=>{
             break;
          
          case 'help':
-            const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , 'warn, mute, kick, ban, burn').addField('⛏UTILITIES⛏' , 'poll, suggest, gym-log, ping , prefix, info ').addField(' 🎊FUN 🎊','toss, roll, av/avatar, topic').addField('🎞IMAGE🎞', 'pat, kiss, hug, punch, kill, handholding, highfive, lucifer').setFooter('Under development |').setTimestamp()
+            const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , '``warn, mute, kick, ban, burn``').addField('⛏UTILITIES⛏' , '``poll, suggest, gym-log, ping , prefix, info``').addField(' 🎊FUN 🎊','``toss, roll, av/avatar, topic``').addField('🎞IMAGE🎞', '``pat, kiss, hug, punch, kill, handholding, highfive, lucifer``').setFooter('Under development |').setTimestamp()
               message.author.send(help);
               message.channel.send('sent you a message in DM!')
          break;
