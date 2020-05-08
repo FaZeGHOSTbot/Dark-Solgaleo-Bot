@@ -21,6 +21,7 @@ bot.on('ready',() =>{
    let BotCountChannel = myGuild.channels.cache.get('708431304148123739')
    let botCount = myGuild.members.cache.filter(m => m.user.bot).size;
    BotCountChannel.setName('📊》Bot: ' + botCount)
+   console.log('Stats updated')
    //705779183544172574
     var testChannel = bot.channels.cache.find(channel => channel.id === '705779183544172574')
     console.log('HELL is unleashed!');
@@ -51,6 +52,7 @@ bot.on('guildMemberAdd', member=>{
    let BotCountChannel = myGuild.channels.cache.get('708431304148123739')
    let botCount = myGuild.members.filter(m => !m.user.bot).size;
    BotCountChannel.setName('📊》Bot: ' + botCount)
+   console.log('Stats updated')
 }) 
 bot.on('guildMemberRemove', member =>{
    const channel = member.guild.channels.cache.find(channel => channel.name === "✨》goodbye");
@@ -66,6 +68,7 @@ bot.on('guildMemberRemove', member =>{
    let BotCountChannel = myGuild.channels.cache.get('708431304148123739')
    let botCount = myGuild.members.cache.filter(m => !m.user.bot).size;
    BotCountChannel.setName('📊》Bot: ' + botCount)
+   console.log('Stats updated')
 })
 
 bot.on('message', message=>{
