@@ -32,8 +32,6 @@ bot.on('ready',() =>{
 })
 
 
-
-
 bot.on('guildMemberAdd', member=>{
     const channel = member.guild.channels.cache.find(channel => channel.name === "✨》welcome");
     if(!channel) return
