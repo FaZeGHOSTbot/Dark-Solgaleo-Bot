@@ -146,6 +146,14 @@ bot.on('message', message=>{
          case 'help':
             const help = new Discord.MessageEmbed()
               .setTitle('Dark Solgaléo Bot Commands')
+              .setColor(0xFF0000)
+              .addField('MODERATION' , 'warn, mute, kick, ban, burn \n ')
+              .addField('IMAGE' , 'pat, hug, kiss, punch ,kill ,cry ,stare ,highfive ,handhold, lucifer \n \n')
+              .addfield('UTILITIES' , 'poll, suggest, gym-log, ping , prefix, info \n \n')
+              .addfield('FUN', 'roll, toss, av/avatar, topic \n \n')
+              .setFooter('Under development |')
+              .setTimestamp();
+              message.author.send(help);
          break;
 
          case 'poll':
@@ -209,8 +217,8 @@ bot.on('message', message=>{
              .setFooter(`Dark Solgaléo Bot |`)
              .setTimestamp()
             message.channel.send(tosss)
-         break;     
-
+         break;   
+                
          case 'ping':
            const pong = new Discord.MessageEmbed()
            
