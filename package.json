@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/opus": "^0.3.2",
-    "canvas": "^2.6.1",
     "cheerio": "^1.0.0-rc.3",
     "common-tags": "^1.8.0",
     "discord-giveaways": "^4.0.2",
