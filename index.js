@@ -142,7 +142,23 @@ bot.on('message', message=>{
                   messageReaction.react('👎');
                })    
             break;
-         
+         case 'dm':
+            let mention1 = message.mentions.users.first();
+            if(message.member.hasPermission("ADMINISTRATOR", explicit = true) ){
+            if (!mention1){
+              message.channel.send("Mention an user to DM.")
+             break;
+            }
+            if(!args[2]){
+            message.channel.send("Type a message to send.")
+            break;
+              }
+            let msgArgs3 = args.slice(1).join(" "); 
+            mention1.send(msgArgs3) 
+            message.channel.send("message sent✔️")
+            }
+            else return message.channel.send("This command is too op for you.")
+            break;
          case 'help':
             const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , '``warn, mute, kick, ban, burn``').addField('⛏UTILITIES⛏' , '``poll, suggest, gym-log, ping , prefix, info``').addField(' 🎊FUN 🎊','``toss, roll, av/avatar, topic``').addField('🎞IMAGE🎞', '``pat, kiss, hug, punch, kill, handholding, highfive, lucifer``').setFooter('Under development |').setTimestamp()
               message.author.send(help);
