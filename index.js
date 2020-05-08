@@ -2,8 +2,6 @@ const Discord = require('discord.js')
 const {Client, Attachment, MessageEmbed} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
-const {createCanvas, loadImage} = require("canvas");
-const {join} = require('path');
 
 const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
