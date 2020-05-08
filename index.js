@@ -2,15 +2,25 @@ const Discord = require('discord.js')
 const {Client, Attachment, MessageEmbed} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
-
-
+const {createCanvas, loadImage} = require("canvas");
+const {join} = require('path');
 
 const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
 const PREFIX = 's!';
 
 bot.on('ready',() =>{
-
+   
+   let myGuild = bot.guilds.cache.get('675017157385388055');
+   let userCount = myGuild.members.cache.filter(m => !m.user.bot).size;
+   let UserCountChannel = myGuild.channels.cache.get('708419734802137119');
+   UserCountChannel.setName('📊》Humans: '+ userCount)
+   let memberCount =  myGuild.memberCount;
+   let MemberCountChannel = myGuild.channels.cache.get('708419469688438875');
+   MemberCountChannel.setName('📊》Members:' + memberCount)
+   let BotCountChannel = myGuild.channels.cache.get('708431304148123739')
+   let botCount = myGuild.members.cache.filter(m => m.user.bot).size;
+   BotCountChannel.setName('📊》Bot: ' + botCount)
    //705779183544172574
     var testChannel = bot.channels.cache.find(channel => channel.id === '705779183544172574')
     console.log('HELL is unleashed!');
@@ -22,6 +32,8 @@ bot.on('ready',() =>{
 })
 
 
+
+
 bot.on('guildMemberAdd', member=>{
     const channel = member.guild.channels.cache.find(channel => channel.name === "✨》welcome");
     if(!channel) return
@@ -31,11 +43,31 @@ bot.on('guildMemberAdd', member=>{
     .setImage('http://cdn.lowgif.com/full/259753d81d46eb42-pokemon-necrozma-face-images-pokemon-images.gif')
     .setColor(0xEE41D6)
    channel.send(`${member} Welcome we been waiting for ya!`,greet)
+   let myGuild = bot.guilds.cache.get('675017157385388055');
+   let userCount = myGuild.members.filter(m => !m.user.bot).size;
+   let UserCountChannel = myGuild.channels.cache.get('708419734802137119');
+   UserCountChannel.setName('📊》Humans: '+ userCount) 
+   let memberCount =  myGuild.memberCount;
+   let MemberCountChannel = myGuild.channels.cache.get('708419469688438875');
+   MemberCountChannel.setName('Members: ' + memberCount)
+   let BotCountChannel = myGuild.channels.cache.get('708431304148123739')
+   let botCount = myGuild.members.filter(m => !m.user.bot).size;
+   BotCountChannel.setName('📊》Bot: ' + botCount)
 }) 
 bot.on('guildMemberRemove', member =>{
    const channel = member.guild.channels.cache.find(channel => channel.name === "✨》goodbye");
    if(!channel) return
    channel.send(`**${member.user.tag}** Just left the server... We hope you had a great time here😭. See ya soon!🤗`)
+   let myGuild = bot.guilds.cache.get('675017157385388055');
+   let userCount = myGuild.members.cache.filter(m => !m.user.bot).size;
+   let UserCountChannel = myGuild.channels.cache.get('708419734802137119');
+   UserCountChannel.setName('📊》Humans: '+ userCount)
+   let memberCount =  myGuild.memberCount;
+   let MemberCountChannel = myGuild.channels.cache.get('708419469688438875');
+   MemberCountChannel.setName('Members: ' + memberCount)
+   let BotCountChannel = myGuild.channels.cache.get('708431304148123739')
+   let botCount = myGuild.members.cache.filter(m => !m.user.bot).size;
+   BotCountChannel.setName('📊》Bot: ' + botCount)
 })
 
 bot.on('message', message=>{
@@ -144,7 +176,7 @@ bot.on('message', message=>{
             break;
          case 'dm':
             let mention1 = message.mentions.users.first();
-            if(message.member.hasPermission("ADMINISTRATOR", explicit = true) ){
+            if(message.member.roles.cache.find(r => r.name === "owner") ){
             if (!mention1){
               message.channel.send("Mention an user to DM.")
              break;
@@ -155,12 +187,12 @@ bot.on('message', message=>{
               }
             let msgArgs3 = args.slice(1).join(" "); 
             mention1.send(msgArgs3) 
-            message.channel.send("message sent✔️")
+            message.channel.send("message sent✅")
             }
             else return message.channel.send("This command is too op for you.")
             break;
          case 'help':
-            const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , '``warn, mute, kick, ban, burn``').addField('⛏UTILITIES⛏' , '``poll, suggest, gym-log, ping , prefix, info``').addField(' 🎊FUN 🎊','``toss, roll, av/avatar, topic``').addField('🎞IMAGE🎞', '``pat, kiss, hug, punch, kill, handholding, highfive, lucifer``').setFooter('Under development |').setTimestamp()
+            const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , '``warn, mute, kick, ban, burn \n \n``').addField('⛏UTILITIES⛏' , '``poll, suggest, gym-log, ping , prefix, info \n \n``').addField(' 🎊FUN 🎊','``toss, roll, av/avatar, topic \n \n``').addField('🎞IMAGE🎞', '``pat, kiss, hug, punch, kill, handholding, highfive, lucifer \n \n``').setFooter('Under development |').setTimestamp()
               message.author.send(help);
               message.channel.send('sent you a message in DM!')
          break;
