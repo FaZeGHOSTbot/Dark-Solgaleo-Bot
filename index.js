@@ -48,7 +48,7 @@ bot.on('guildMemberAdd', member=>{
    let MemberCountChannel = myGuild.channels.cache.get('708419469688438875');
    MemberCountChannel.setName('Members: ' + memberCount)
    let BotCountChannel = myGuild.channels.cache.get('708431304148123739')
-   let botCount = myGuild.members.filter(m => !m.user.bot).size;
+   let botCount = myGuild.members.cache.filter(m => !m.user.bot).size;
    BotCountChannel.setName('📊》Bot: ' + botCount)
    console.log('Stats updated')
 }) 
