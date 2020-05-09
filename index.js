@@ -41,7 +41,7 @@ bot.on('guildMemberAdd', member=>{
     .setColor(0xEE41D6)
    channel.send(`${member} Welcome we been waiting for ya!`,greet)
    let myGuild = bot.guilds.cache.get('675017157385388055');
-   let userCount = myGuild.members.filter(m => !m.user.bot).size;
+   let userCount = myGuild.members.cache.filter(m => !m.user.bot).size;
    let UserCountChannel = myGuild.channels.cache.get('708419734802137119');
    UserCountChannel.setName('📊》Humans: '+ userCount) 
    let memberCount =  myGuild.memberCount;
