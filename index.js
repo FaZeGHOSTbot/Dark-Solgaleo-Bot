@@ -2,10 +2,17 @@ const Discord = require('discord.js')
 const {Client, Attachment, MessageEmbed} = require('discord.js');
 const bot = new Client();
 const ms =require('ms');
-
+const fs = require("fs");
+let coins = require("./coins.json");
+let bank = require("./bank.json");
+let networth = require("./networth.json");
 const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
 const PREFIX = 's!';
+
+const WorkCommand = new Set();
+
+fs.readdir("./commands/", (err, files) => {
 
 bot.on('ready',() =>{
    
@@ -40,6 +47,22 @@ bot.on('guildMemberAdd', member=>{
     .setImage('http://cdn.lowgif.com/full/259753d81d46eb42-pokemon-necrozma-face-images-pokemon-images.gif')
     .setColor(0xEE41D6)
    channel.send(`${member} Welcome we been waiting for ya!`,greet)
+   if (!bank[member.user.id]){
+      bank[member.user.id] = {
+         bank: 0
+      };
+      fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+         if (err) console.log(err)
+      }); 
+   }
+   if (!coins[member.user.id]){
+      coins[member.user.id] = {
+         coins: 0
+      };
+      fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+         if (err) console.log(err)
+      }); 
+   } 
    let myGuild = bot.guilds.cache.get('675017157385388055');
    let userCount = myGuild.members.cache.filter(m => !m.user.bot).size;
    let UserCountChannel = myGuild.channels.cache.get('708419734802137119');
@@ -69,8 +92,10 @@ bot.on('guildMemberRemove', member =>{
    console.log('Stats updated')
 })
 
-bot.on('message', message=>{
 
+bot.on('message',async message=>{
+
+    
    const agrs = message.content.split(" ").slice(1);
    var DeleteCount = parseInt(agrs[0], 10);
    if(message.content.includes("s!burn")){
@@ -88,7 +113,7 @@ bot.on('message', message=>{
       if (message.author.id === bot.user.id) return;
       message.channel.send('If you want to sell something, head over to <#675066848416628736>');
    }
-
+   
   switch(message.content.toLowerCase()){
    
      case 'spawn':
@@ -194,6 +219,295 @@ bot.on('message', message=>{
             const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , '``warn, mute, kick, ban, burn \n \n``').addField('⛏UTILITIES⛏' , '``poll, suggest, gym-log, ping , prefix, info \n \n``').addField(' 🎊FUN 🎊','``toss, roll, av/avatar, topic \n \n``').addField('🎞IMAGE🎞', '``pat, kiss, hug, punch, kill, handholding, highfive, lucifer \n \n``').setFooter('Under development |').setTimestamp()
               message.author.send(help);
               message.channel.send('sent you a message in DM!')
+         break;
+         
+         case 'bal':
+         case 'balance':
+            var userbal = message.author;
+            var mentionBal = message.mentions.users.first();
+            if(!coins[userbal.id]) {
+               coins[userbal.id] = {
+                  coins: 0
+               };
+            fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+            if(!coins[mentionBal.id]) {
+               coins[mentionBal.id] = {
+                  coins: 0
+               };
+               fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+            if(!bank[mentionBal.id]) {
+               bank[mentionBal.id] = {
+                  bank: 0
+               };
+               fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+            if(!bank[userbal.id]) {
+               bank[userbal.id] = {
+                  bank: 0
+               };
+            fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+            var mentionBal = message.mentions.users.first();
+            if(!args[1]){
+               networth[message.author.id] = {
+                  networth: bank[message.author.id].bank + coins[message.author.id].coins
+               };
+              const ball = new Discord.MessageEmbed()
+             .setAuthor(message.author.username)
+             .setColor(0xFFC300)
+             .setThumbnail(userbal.avatarURL())
+             .addField(':moneybag:Wallet',`${coins[userbal.id].coins} Credits`)
+             .addField(':moneybag:Bank', `${bank[userbal.id].bank} Credits`)
+             .setTimestamp()
+            message.channel.send(ball);
+
+            }else if(mentionBal) {
+               const bal = new Discord.MessageEmbed()
+               .setAuthor(mentionBal.username)
+               .setColor(0xFFC300)
+               .setThumbnail(mentionBal.avatarURL())
+               .addField(':moneybag:BALANCE',`${coins[mentionBal.id].coins} Credits`)
+               .addField(':moneybag:Bank', `${bank[mentionBal.id].bank} Credits`)
+               .setTimestamp()
+               message.channel.send(bal);
+            }else return;
+           
+        break;
+
+        case 'daily':
+         if(WorkCommand.has(message.author.id)){
+            message.reply("The command can be used every 24 hours.");
+         }else{
+            const daily = new Discord.MessageEmbed()
+            .setAuthor(message.author.username)
+            .setDescription('You have been given your daily **2000** Credits!')  
+            .setTimestamp() 
+         message.channel.send(daily);
+ 
+         coins[message.author.id] = {
+          coins: coins[message.author.id].coins + 2000
+       };
+       fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+          if (err) console.log(err)
+       }); 
+       WorkCommand.add(message.author.id);
+       setTimeout(() =>{
+       WorkCommand.delete(message.author.id)
+       }, 7200000);
+    }   
+    break;
+
+        case 'pray':
+         if(WorkCommand.has(message.author.id)){
+            message.reply("The command can be used every 2 hours.");
+         }else{
+         let prayAmt = Math.floor(Math.random() * 1001) + 500;
+         prayResult = [Math.floor(Math.random() * 2)]
+         if(prayResult == 0){
+            const prayJesus = new Discord.MessageEmbed()
+                    .setTitle("Bless You!")
+                    .setDescription(`Jesus listened to your prayer and blessed you with ${prayAmt} Credits.`)
+                    .setTimestamp()
+                    .setColor(0x73ca6f);
+            message.channel.send(prayJesus)
+            coins[message.author.id] = {
+               coins: coins[message.author.id].coins + prayAmt
+            };
+            fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+               if (err) console.log(err)
+            }); 
+         }if(prayResult == 1){
+            const praySatan = new Discord.MessageEmbed()
+                    .setTitle("Oh Cursed!")
+                    .setDescription(`Satan heard your prayer and played a game with you , you lost the game and paid **${prayAmt}** Credits to Ssatan instead of your soul.`)
+                    .setTimestamp()
+                    .setColor(0xf51515);
+            message.channel.send(praySatan)
+            if(coins[message.author.id].coins < prayAmt){
+            let remainCoin = prayAmt - coins[message.author.id].coins
+            coins[message.author.id] = {
+               coins: 0
+            };
+            bank[message.author.id] = {
+               bank: bank[message.author.id].bank - remainCoin
+            };
+            fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+               if (err) console.log(err)
+            }); 
+            fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+               if (err) console.log(err)
+            }); 
+         }
+      }
+      WorkCommand.add(message.author.id);
+      setTimeout(() =>{
+      WorkCommand.delete(message.author.id)
+      }, 7200000);
+   }
+        break;
+        case 'work':
+           if(WorkCommand.has(message.author.id)){
+              message.reply("The command can be used every 2 hours.");
+           }else{
+           let coinAmt = Math.floor(Math.random() * 500) + 250;
+           
+           const work = new Discord.MessageEmbed()
+           .setAuthor(message.author.username)
+           .setDescription(`You worked hard and earned ${coinAmt} Credits!`)  
+           .setTimestamp() 
+        message.channel.send(work);
+
+        coins[message.author.id] = {
+         coins: coins[message.author.id].coins + coinAmt
+      };
+      fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+         if (err) console.log(err)
+      }); 
+      WorkCommand.add(message.author.id);
+      setTimeout(() =>{
+      WorkCommand.delete(message.author.id)
+      }, 7200000);
+   }
+      break;
+      
+      case 'loot':
+      case 'steal':
+      case 'rob':
+         if(WorkCommand.has(message.author.id)){
+            message.reply("The command can be used every 24 hours.");
+         }else{
+            let robMention = message.mentions.users.first();
+         if(!args[1]){ 
+           const robCmd = new Discord.MessageEmbed()
+             .setTitle("Rob Command")
+             .setDescription('You cannot rob no one smh.')
+             .setTimestamp()
+             .setColor(0xCA6F7A);
+            message.channel.send(robCmd)
+           return;
+         }
+         if(coins[message.author.id].coins < 499) return message.channel.send("You need to have a minimum of 500 Credits to rob!");
+         if(robMention){
+           if(coins[robMention.id].coins === 0){
+            const robCmd1 = new Discord.MessageEmbed()
+             .setTitle("Rob Command")
+             .setDescription('The user has no coins for you to rob.Safe Played!')
+             .setTimestamp()
+             .setColor(0xCA6F7A);
+             message.channel.send(robCmd1)
+            }
+            else if(coins[robMention.id].coins > 0){
+               robResult = [Math.floor(Math.random() * 2)]
+               message.channel.send(robResult);
+               if(robResult == 1){
+                  const robFail = new Discord.MessageEmbed()
+                    .setTitle("Uh-Oh")
+                    .setDescription('You took the robbing easy and failed and instead paid a 500 Credits fine to him.')
+                    .setTimestamp()
+                    .setColor(0xCA6F7A);
+                 message.channel.send(robFail)
+                  coins[robMention.id] = {
+                     coins: coins[robMention.id].coins + 500
+                  };
+                  coins[message.author.id] = {
+                     coins: coins[message.author.id].coins - 500
+                  };
+                  fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                     if (err) console.log(err)
+                  }); 
+               }else if(robResult == 0){
+               let robAmt = Math.floor(Math.random() * coins[robMention.id].coins) + 1;
+               const robSuccess = new Discord.MessageEmbed()
+                  .setTitle("Congo!")
+                  .setDescription(`You were a pro robber and robbed ${robAmt} Credits from ${robMention.username}`)
+                  .setTimestamp()
+                  .setColor(0x6fca80);
+                message.channel.send(robSuccess)
+               coins[robMention.id] = {
+                  coins: coins[robMention.id].coins - robAmt
+               };
+               coins[message.author.id] = {
+                  coins: coins[message.author.id].coins + robAmt
+               };
+               fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                  if (err) console.log(err)
+               }); 
+               }
+            }
+         }
+         WorkCommand.add(message.author.id);
+      setTimeout(() =>{
+      WorkCommand.delete(message.author.id)
+      }, 14400000);
+      }
+      break;
+
+        case 'deposit':
+        case 'dep':
+         let depArgs = args[1]
+             if(args[1] === 'all'){
+                if(coins[message.author.id].coins === 0) return message.channel.send('No Credits to deposit.');
+                if(coins[message.author.id].coins != 0){
+               const bankdep = new Discord.MessageEmbed()
+                  .setAuthor(message.author.username)
+                  .setDescription(`Deposited ${coins[message.author.id].coins} Credits to the bank!`)  
+                  .setTimestamp() 
+               message.channel.send(bankdep);
+
+               bank[message.author.id] = {
+                  bank: coins[message.author.id].coins
+               };
+               coins[message.author.id] = {
+                  coins: 0
+               };
+
+               fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+                  if (err) console.log(err)
+               }); 
+               fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+            }else if(isNaN(depArgs)){
+               const deps = new Discord.MessageEmbed()
+               .setTitle('Deposit Command')
+               .addField('Correct Syntax' , 's!dep <number>')
+               .setTimestamp() 
+            message.channel.send(deps);
+            }else{
+               if(coins[message.author.id].coins === 0) return message.channel.send('No Credits to deposit.');
+               if(coins[message.author.id].coins < depArgs) return message.channel.send("You don't have that much coins in your wallet.");
+               if(coins[message.author.id].coins >= depArgs){
+                  const banksdep = new Discord.MessageEmbed()
+                  .setAuthor(message.author.username)
+                  .setDescription(`Deposited ${depArgs} Credits to the bank!`)  
+                  .setTimestamp() 
+               message.channel.send(banksdep);
+               bank[message.author.id] = {
+                  bank: depArgs
+               };
+               coins[message.author.id] = {
+                  coins: coins[message.author.id].coins - depArgs
+               };
+               fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+                  if (err) console.log(err)
+               }); 
+               fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+         }
+           
          break;
 
          case 'poll':
@@ -615,4 +929,5 @@ bot.on('message', message=>{
 
 })   
 
+})
 bot.login(token);
