@@ -12,8 +12,6 @@ const PREFIX = 's!';
 
 const WorkCommand = new Set();
 
-fs.readdir("./commands/", (err, files) => {
-
 bot.on('ready',() =>{
    
    let myGuild = bot.guilds.cache.get('675017157385388055');
@@ -259,9 +257,6 @@ bot.on('message',async message=>{
             }
             var mentionBal = message.mentions.users.first();
             if(!args[1]){
-               networth[message.author.id] = {
-                  networth: bank[message.author.id].bank + coins[message.author.id].coins
-               };
               const ball = new Discord.MessageEmbed()
              .setAuthor(message.author.username)
              .setColor(0xFFC300)
@@ -280,7 +275,7 @@ bot.on('message',async message=>{
                .addField(':moneybag:Bank', `${bank[mentionBal.id].bank} Credits`)
                .setTimestamp()
                message.channel.send(bal);
-            }else return;
+            }
            
         break;
 
@@ -929,5 +924,4 @@ bot.on('message',async message=>{
 
 })   
 
-})
 bot.login(token);
