@@ -223,59 +223,58 @@ bot.on('message',async message=>{
          case 'balance':
             var userbal = message.author;
             var mentionBal = message.mentions.users.first();
-            if(!coins[userbal.id]) {
-               coins[userbal.id] = {
-                  coins: 0
-               };
-            fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
-                  if (err) console.log(err)
-               }); 
-            }
-            if(!coins[mentionBal.id]) {
-               coins[mentionBal.id] = {
-                  coins: 0
-               };
+            if(!args[1]){
+               if(!coins[userbal.id]) {
+                  coins[userbal.id] = {
+                     coins: 0
+                  };
                fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
-                  if (err) console.log(err)
-               }); 
-            }
-            if(!bank[mentionBal.id]) {
-               bank[mentionBal.id] = {
+                     if (err) console.log(err)
+                  }); 
+               }
+            if(!bank[userbal.id]) {
+               bank[userBal.id] = {
                   bank: 0
                };
                fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
                   if (err) console.log(err)
                }); 
             }
-            if(!bank[userbal.id]) {
-               bank[userbal.id] = {
-                  bank: 0
-               };
-            fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
-                  if (err) console.log(err)
-               }); 
-            }
-            var mentionBal = message.mentions.users.first();
-            if(!args[1]){
               const ball = new Discord.MessageEmbed()
              .setAuthor(message.author.username)
              .setColor(0xFFC300)
              .setThumbnail(userbal.avatarURL())
-             .addField(':moneybag:Wallet',`${coins[userbal.id].coins} Credits`)
-             .addField(':moneybag:Bank', `${bank[userbal.id].bank} Credits`)
+             .addField(':moneybag:Wallet:',`${coins[userbal.id].coins} Credits`)
+             .addField(':moneybag:Bank:', `${bank[userbal.id].bank} Credits`)
              .setTimestamp()
             message.channel.send(ball);
 
-            }else if(mentionBal) {
+            }else if(mentionBal){
+               if(!bank[mentionBal.id]) {
+                  bank[mentionBal.id] = {
+                     bank: 0
+                  };
+                  fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+                     if (err) console.log(err)
+                  }); 
+               }
+               if(!coins[mentionBal.id]) {
+                  coins[mentionBal.id] = {
+                     coins: 0
+                  };
+               fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                     if (err) console.log(err)
+                  }); 
+               }
                const bal = new Discord.MessageEmbed()
                .setAuthor(mentionBal.username)
                .setColor(0xFFC300)
                .setThumbnail(mentionBal.avatarURL())
-               .addField(':moneybag:BALANCE',`${coins[mentionBal.id].coins} Credits`)
-               .addField(':moneybag:Bank', `${bank[mentionBal.id].bank} Credits`)
+               .addField(':moneybag:Wallet:',`${coins[mentionBal.id].coins} Credits`)
+               .addField(':moneybag:Bank:', `${bank[mentionBal.id].bank} Credits`)
                .setTimestamp()
                message.channel.send(bal);
-            }
+            }else return;
            
         break;
 
