@@ -10,10 +10,10 @@ const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
 const PREFIX = 's!';
 
-const used = new Set();
-const workCool = new Set();
-const PrayCool = new Set();
-const RobCool = new Set();
+const used = new Map();
+const workCool = new Map();
+const PrayCool = new Map();
+const RobCool = new Map();
 const Duration = require('humanize-duration');
 
 bot.on('ready',() =>{
