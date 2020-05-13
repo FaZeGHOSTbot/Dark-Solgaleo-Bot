@@ -361,7 +361,7 @@ bot.on('message',async message=>{
         break;
 
         case 'daily':
-         const cooldown = used.map(message.author.id);
+         const cooldown = used.get(message.author.id);
          if (cooldown) {
             const Remaining = Duration(cooldown - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${Remaining} Before using this command again!`).catch((err) => message.reply(`${err}`));
@@ -386,15 +386,12 @@ bot.on('message',async message=>{
     break;
 
         case 'pray':
-         const cooldownPray = workCool.map(message.author.id);
+         const cooldownPray = workCool.get(message.author.id);
          if (cooldownPray) {
             const RemainingPray = Duration(cooldownPray - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${RemainingPray} Before using this command again!`).catch((err) => message.reply(`${err}`));
          }
          else{
-         if(WorkCommand.has(message.author.id)){
-            message.reply("The command can be used every 2 hours.");
-         }else{
          let prayAmt = Math.floor(Math.random() * 1001) + 500;
          prayResult = [Math.floor(Math.random() * 2)]
          if(prayResult == 0){
@@ -433,20 +430,19 @@ bot.on('message',async message=>{
             }); 
          }
       }
-   }
+   
    workCool.set(message.author.id, Date.now() + 1000 * 60 * 60 * 2);
    setTimeout(() => { workCool.delete(message.author.id), 1000 * 60 * 60 * 2});
 }
         break;
         case 'work':
-         const cooldownWork = PrayCool.map(message.author.id);
+         const cooldownWork = PrayCool.get(message.author.id);
          if (cooldownWork) {
             const RemainingWork = Duration(cooldownWork - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${RemainingWork} Before using this command again!`).catch((err) => message.reply(`${err}`));
          }
          else{
            let coinAmt = Math.floor(Math.random() * 500) + 250;
-           
            const work = new Discord.MessageEmbed()
            .setAuthor(message.author.username)
            .setDescription(`You worked hard and earned ${coinAmt} Credits!`)  
@@ -467,7 +463,7 @@ bot.on('message',async message=>{
       case 'loot':
       case 'steal':
       case 'rob':
-         const cooldownRob = RobCool.map(message.author.id);
+         const cooldownRob = RobCool.get(message.author.id);
          if (cooldownRob) {
             const RemainingRob = Duration(cooldownRob - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${RemainingRob} Before using this command again!`).catch((err) => message.reply(`${err}`));
