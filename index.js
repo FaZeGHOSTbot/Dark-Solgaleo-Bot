@@ -10,7 +10,11 @@ const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
 const PREFIX = 's!';
 
-const WorkCommand = new Set();
+const used = new Set();
+const workCool = new Set();
+const PrayCool = new Set();
+const RobCool = new Set();
+const Duration = require('humanize-duration');
 
 bot.on('ready',() =>{
    
@@ -93,7 +97,7 @@ bot.on('guildMemberRemove', member =>{
 
 bot.on('message',async message=>{
 
-    
+   
    const agrs = message.content.split(" ").slice(1);
    var DeleteCount = parseInt(agrs[0], 10);
    if(message.content.includes("s!burn")){
@@ -214,10 +218,88 @@ bot.on('message',async message=>{
             else return message.channel.send("This command is too op for you.")
             break;
          case 'help':
-            const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , '``warn, mute, kick, ban, burn \n \n``').addField('⛏UTILITIES⛏' , '``poll, suggest, gym-log, ping , prefix, info \n \n``').addField(' 🎊FUN 🎊','``toss, roll, av/avatar, topic \n \n``').addField('🎞IMAGE🎞', '``pat, kiss, hug, punch, kill, handholding, highfive, lucifer \n \n``').setFooter('Under development |').setTimestamp()
+            const help = new Discord.MessageEmbed().setTitle('💎Dark Solgaléo Bot Commands💎').setColor(0xFF0000).addField('⚖️MODERATION⚖️' , '``warn, mute, kick, ban, burn \n \n``').addField(`🤑CURRENCY🤑`,'``withdraw/with, deposit/dep, balance/bal, work, pray, rob/steal/loot, daily``').addField('⛏UTILITIES⛏' , '``poll, suggest, gym-log, ping , prefix, info, dm \n \n``').addField(' 🎊FUN 🎊','``toss, roll, av/avatar, topic \n \n``').addField('🎞IMAGE🎞', '``pat, kiss, hug, punch, kill, handholding, highfive, lucifer \n \n``').setFooter('Under development |').setTimestamp()
               message.author.send(help);
               message.channel.send('sent you a message in DM!')
          break;
+
+         case 'gamble':
+         case 'bet':
+            
+
+         case 'with':
+         case 'withdraw':
+            let withallAmt = bank[message.author.id].bank;
+               if(!coins[message.author.id]) {
+                  coins[message.author.id] = {
+                     coins: 0
+                  };
+               fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                     if (err) console.log(err)
+                  }); 
+               }
+            if(!bank[message.author.id]) {
+               bank[message.author.id] = {
+                  bank: 0
+               };
+               fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+            coins[message.author.id] = {
+               coins: coins[message.author.id].coins + bank[message.author.id].bank
+            };
+            bank[message.author.id] = {
+               bank: 0
+            };
+            fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+               if (err) console.log(err)
+            });   
+            fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+               if (err) console.log(err)
+            });  
+            if(args[1] == 'all'){ 
+            const withall = new Discord.MessageEmbed()
+            .setAuthor(message.author.username)
+            .setColor(0xFFC300)
+            .setThumbnail(message.author.avatarURL())
+            .addField('Withdrawn: ',`**${withallAmt}** Credits from the bank`)
+            .setTimestamp()
+           message.channel.send(withall);
+
+            }else if(isNaN(args[1])){
+               const withfail = new Discord.MessageEmbed()
+               .setTitle('Withdraw Command')
+               .addField('Correct Syntax' , 's!withall <amount> / s!with <amount>')
+               .setTimestamp() 
+            message.channel.send(Withfail);
+            }else{
+               if(withallAmt === 0) return message.channel.send('Nothing to withdraw from bank.');
+               if(withallAmt < args[1]) return message.channel.send("You don't have that much credits in your bank.");
+               if(withallAmt >= args[1]){
+                  const WithAmt = new Discord.MessageEmbed()
+                  .setAuthor(message.author.username)
+                  .addField('Withdrawn: ',`**${args[1]}** Credits from the bank!`)  
+                  .setTimestamp()
+                  .setColor(0xFFC300) 
+               message.channel.send(WithAmt);
+               bank[message.author.id] = {
+                  bank: bank[message.author.id].bank - args[1]
+               };
+               coins[message.author.id] = {
+                  coins: coins[message.author.id].coins + args[1]
+               };
+               fs.writeFile("./bank.json",JSON.stringify(bank), (err) =>{
+                  if (err) console.log(err)
+               }); 
+               fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
+                  if (err) console.log(err)
+               }); 
+            }
+         }
+           
+         break; 
+
          
          case 'bal':
          case 'balance':
@@ -279,9 +361,12 @@ bot.on('message',async message=>{
         break;
 
         case 'daily':
-         if(WorkCommand.has(message.author.id)){
-            message.reply("The command can be used every 24 hours.");
-         }else{
+         const cooldown = used.map(message.author.id);
+         if (cooldown) {
+            const Remaining = Duration(cooldown - date.now(), {units: ['h', 'm'], round: true});
+            return message.reply(`You need to wait ${Remaining} Before using this command again!`).catch((err) => message.reply(`${err}`));
+         }
+         else{
             const daily = new Discord.MessageEmbed()
             .setAuthor(message.author.username)
             .setDescription('You have been given your daily **2000** Credits!')  
@@ -294,14 +379,19 @@ bot.on('message',async message=>{
        fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
           if (err) console.log(err)
        }); 
-       WorkCommand.add(message.author.id);
-       setTimeout(() =>{
-       WorkCommand.delete(message.author.id)
-       }, 7200000);
-    }   
+       used.set(message.author.id, Date.now() + 1000 * 60 * 60 * 24);
+       setTimeout(() => { used.delete(message.author.id), 1000 * 60 * 60 * 24});
+      }
+       
     break;
 
         case 'pray':
+         const cooldownPray = workCool.map(message.author.id);
+         if (cooldownPray) {
+            const RemainingPray = Duration(cooldownPray - date.now(), {units: ['h', 'm'], round: true});
+            return message.reply(`You need to wait ${RemainingPray} Before using this command again!`).catch((err) => message.reply(`${err}`));
+         }
+         else{
          if(WorkCommand.has(message.author.id)){
             message.reply("The command can be used every 2 hours.");
          }else{
@@ -343,16 +433,18 @@ bot.on('message',async message=>{
             }); 
          }
       }
-      WorkCommand.add(message.author.id);
-      setTimeout(() =>{
-      WorkCommand.delete(message.author.id)
-      }, 7200000);
    }
+   workCool.set(message.author.id, Date.now() + 1000 * 60 * 60 * 2);
+   setTimeout(() => { workCool.delete(message.author.id), 1000 * 60 * 60 * 2});
+}
         break;
         case 'work':
-           if(WorkCommand.has(message.author.id)){
-              message.reply("The command can be used every 2 hours.");
-           }else{
+         const cooldownWork = PrayCool.map(message.author.id);
+         if (cooldownWork) {
+            const RemainingWork = Duration(cooldownWork - date.now(), {units: ['h', 'm'], round: true});
+            return message.reply(`You need to wait ${RemainingWork} Before using this command again!`).catch((err) => message.reply(`${err}`));
+         }
+         else{
            let coinAmt = Math.floor(Math.random() * 500) + 250;
            
            const work = new Discord.MessageEmbed()
@@ -367,20 +459,21 @@ bot.on('message',async message=>{
       fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
          if (err) console.log(err)
       }); 
-      WorkCommand.add(message.author.id);
-      setTimeout(() =>{
-      WorkCommand.delete(message.author.id)
-      }, 7200000);
+      PrayCool.set(message.author.id, Date.now() + 1000 * 60 * 60 * 2);
+   setTimeout(() => { PrayCool.delete(message.author.id), 1000 * 60 * 60 * 2});
    }
       break;
       
       case 'loot':
       case 'steal':
       case 'rob':
-         if(WorkCommand.has(message.author.id)){
-            message.reply("The command can be used every 24 hours.");
-         }else{
-            let robMention = message.mentions.users.first();
+         const cooldownRob = RobCool.map(message.author.id);
+         if (cooldownRob) {
+            const RemainingRob = Duration(cooldownRob - date.now(), {units: ['h', 'm'], round: true});
+            return message.reply(`You need to wait ${RemainingRob} Before using this command again!`).catch((err) => message.reply(`${err}`));
+         }
+         else{
+         let robMention = message.mentions.users.first();
          if(!args[1]){ 
            const robCmd = new Discord.MessageEmbed()
              .setTitle("Rob Command")
@@ -439,10 +532,8 @@ bot.on('message',async message=>{
                }
             }
          }
-         WorkCommand.add(message.author.id);
-      setTimeout(() =>{
-      WorkCommand.delete(message.author.id)
-      }, 14400000);
+         RobCool.set(message.author.id, Date.now() + 1000 * 60 * 60 * 4);
+         setTimeout(() => { RobCool.delete(message.author.id), 1000 * 60 * 60 * 4});
       }
       break;
 
