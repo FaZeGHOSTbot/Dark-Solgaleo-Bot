@@ -10,10 +10,10 @@ const token = 'Njg3NTY1Mjc1OTE0MDQzNDIx.Xq0n1Q.9dXKbco6mfWumyT9GjCaIOZ_dzw';
 
 const PREFIX = 's!';
 
-const used = new Map();
-const workCool = new Map();
-const PrayCool = new Map();
-const RobCool = new Map();
+const used = new set();
+const workCool = new set();
+const PrayCool = new set();
+const RobCool = new set();
 const Duration = require('humanize-duration');
 
 bot.on('ready',() =>{
@@ -328,6 +328,7 @@ bot.on('message',async message=>{
              .setThumbnail(userbal.avatarURL())
              .addField(':moneybag:Wallet:',`${coins[userbal.id].coins} Credits`)
              .addField(':moneybag:Bank:', `${bank[userbal.id].bank} Credits`)
+             .addField(':moneybag:Net Worth' , `${coins[userbal.id].coins+bank[userbal.id].bank} Credits`)
              .setTimestamp()
             message.channel.send(ball);
 
@@ -354,6 +355,7 @@ bot.on('message',async message=>{
                .setThumbnail(mentionBal.avatarURL())
                .addField(':moneybag:Wallet:',`${coins[mentionBal.id].coins} Credits`)
                .addField(':moneybag:Bank:', `${bank[mentionBal.id].bank} Credits`)
+               .addField(':moneybag:Net Worth' , `${coins[mentionBal.id].coins+bank[mentionBal.id].bank} Credits`)
                .setTimestamp()
                message.channel.send(bal);
             }else return;
@@ -361,7 +363,7 @@ bot.on('message',async message=>{
         break;
 
         case 'daily':
-         const cooldown = used.get(message.author.id);
+         const cooldown = used.cache.get(message.author.id);
          if (cooldown) {
             const Remaining = Duration(cooldown - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${Remaining} Before using this command again!`).catch((err) => message.reply(`${err}`));
@@ -379,14 +381,16 @@ bot.on('message',async message=>{
        fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
           if (err) console.log(err)
        }); 
-       used.set(message.author.id, Date.now() + 1000 * 60 * 60 * 24);
-       setTimeout(() => { used.delete(message.author.id), 1000 * 60 * 60 * 24});
+      used.add(message.author.id);
+      setTimeout(() => {
+         used.delete(message.author.id)
+      }, 1000 * 60 * 60 * 24);
       }
        
     break;
 
         case 'pray':
-         const cooldownPray = workCool.get(message.author.id);
+         const cooldownPray = workCool.cache.get(message.author.id);
          if (cooldownPray) {
             const RemainingPray = Duration(cooldownPray - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${RemainingPray} Before using this command again!`).catch((err) => message.reply(`${err}`));
@@ -431,12 +435,14 @@ bot.on('message',async message=>{
          }
       }
    
-   workCool.set(message.author.id, Date.now() + 1000 * 60 * 60 * 2);
-   setTimeout(() => { workCool.delete(message.author.id), 1000 * 60 * 60 * 2});
+      workCool.add(message.author.id);
+      setTimeout(() => {
+         workCool.delete(message.author.id)
+      }, 1000 * 60 * 60 * 2);
 }
         break;
         case 'work':
-         const cooldownWork = PrayCool.get(message.author.id);
+         const cooldownWork = PrayCool.cache.get(message.author.id);
          if (cooldownWork) {
             const RemainingWork = Duration(cooldownWork - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${RemainingWork} Before using this command again!`).catch((err) => message.reply(`${err}`));
@@ -455,15 +461,17 @@ bot.on('message',async message=>{
       fs.writeFile("./coins.json",JSON.stringify(coins), (err) =>{
          if (err) console.log(err)
       }); 
-      PrayCool.set(message.author.id, Date.now() + 1000 * 60 * 60 * 2);
-   setTimeout(() => { PrayCool.delete(message.author.id), 1000 * 60 * 60 * 2});
+      PrayCool.add(message.author.id);
+      setTimeout(() => {
+         PrayCool.delete(message.author.id)
+      }, 1000 * 60 * 60 * 2);
    }
       break;
       
       case 'loot':
       case 'steal':
       case 'rob':
-         const cooldownRob = RobCool.get(message.author.id);
+         const cooldownRob = RobCool.cache.get(message.author.id);
          if (cooldownRob) {
             const RemainingRob = Duration(cooldownRob - date.now(), {units: ['h', 'm'], round: true});
             return message.reply(`You need to wait ${RemainingRob} Before using this command again!`).catch((err) => message.reply(`${err}`));
@@ -528,13 +536,16 @@ bot.on('message',async message=>{
                }
             }
          }
-         RobCool.set(message.author.id, Date.now() + 1000 * 60 * 60 * 4);
-         setTimeout(() => { RobCool.delete(message.author.id), 1000 * 60 * 60 * 4});
+         RobCool.add(message.author.id);
+         setTimeout(() => {
+            RobCool.delete(message.author.id)
+         }, 1000 * 60 * 60 * 4);
       }
       break;
 
         case 'deposit':
         case 'dep':
+           let bankTotal = bank[message.author.id].banks;
          let depArgs = args[1]
              if(args[1] === 'all'){
                 if(coins[message.author.id].coins === 0) return message.channel.send('No Credits to deposit.');
@@ -546,7 +557,7 @@ bot.on('message',async message=>{
                message.channel.send(bankdep);
 
                bank[message.author.id] = {
-                  bank: coins[message.author.id].coins
+                  bank: coins[message.author.id].coins + bankTotal
                };
                coins[message.author.id] = {
                   coins: 0
@@ -575,7 +586,7 @@ bot.on('message',async message=>{
                   .setTimestamp() 
                message.channel.send(banksdep);
                bank[message.author.id] = {
-                  bank: depArgs
+                  bank: depArgs + bankTotal
                };
                coins[message.author.id] = {
                   coins: coins[message.author.id].coins - depArgs
